@@ -1,10 +1,9 @@
-import org.apache.commons.math3.stat.StatUtils
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
-@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import plag.parser.*;
 import plag.parser.java.*
 import plag.parser.report.*
+@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
@@ -112,4 +111,20 @@ new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").with
     token_stats_aggregate.each { token, stats_list ->
         out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
     }
+}
+
+new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.gnuplot").withWriter { out ->
+    out << generateGnuplotScript("aggregate_histogram", TASKS.size())
+}
+
+private generateGnuplotScript(def filename, def datasets_count)
+{
+    return """\
+set terminal postscript eps color "Sans" 8 solid
+set output "${filename}.eps"
+set style histogram errorbars
+set style data histograms
+set xtic rotate by -90 scale 0
+plot \
+""" + (1..datasets_count).collect { i -> "\"${filename}.txt\" using ${i*2}:${i*2 + 1}:xtic(1) title col" }.join(", ")
 }
