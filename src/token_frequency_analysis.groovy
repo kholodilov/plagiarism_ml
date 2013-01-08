@@ -4,6 +4,8 @@ import plag.parser.java.*
 import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+@Grab(group='com.madgag', module='util-intervals', version='1.33')
+import static com.madgag.interval.SimpleInterval.interval
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
@@ -13,6 +15,14 @@ final TASKS = [
                 "reflection0" : "ReflectionsImpl.java"
               ]
 final REPORTING = false
+final HISTOGRAMS = false
+
+final NUMBER_INTERVALS = 7
+final SIMILARITY_INTERVALS =
+    (0..NUMBER_INTERVALS-1)
+            .collect { center ->
+                interval((center - 0.5) / (NUMBER_INTERVALS - 1), (center + 0.5) / (NUMBER_INTERVALS - 1))
+            }
 
 Stats.newCounter("files_to_parse");
 Stats.newCounter("file_comparisons");
@@ -21,7 +31,7 @@ Debug.setEnabled(false)
 def test_data_directory = new File("/Users/kholodilov/Temp/Masters/test_data")
 def analysis_results_directory = new File("/Users/kholodilov/Temp/Masters/analysis/tasks/")
 
-def task_average_similarities = [:]
+def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
 TASKS.each { task_name, task_file_name ->
@@ -42,8 +52,6 @@ TASKS.each { task_name, task_file_name ->
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(analysis_results_directory, task_name)
     task_results_directory.mkdirs()
-    double sum_similarities = 0.0
-    int comparisons_count = 0
     for (int i = 0; i < task_files.size(); i++)
     {
         for (int j = i + 1; j < task_files.size(); j++)
@@ -69,8 +77,7 @@ TASKS.each { task_name, task_file_name ->
             def total_tokens = fileDetectionResult.tokensA.size()
             token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
 
-            sum_similarities += fileDetectionResult.similarityA
-            comparisons_count++
+            task_similarities[task_name] << fileDetectionResult.similarityA
 
             if (REPORTING)
             {
@@ -85,36 +92,47 @@ TASKS.each { task_name, task_file_name ->
             }
         }
     }
-    task_average_similarities[task_name] = sum_similarities / comparisons_count
     task_token_stats[task_name] =
         token_frequencies.collectEntries { token, frequencies -> [token , new DescriptiveStatistics(frequencies as double[])]}
 }
 
-private listAllTokens() {
-    PlagSym.valueStrings
-            .findAll { it != null }
-}
-
-println task_average_similarities
-def token_stats_aggregate = [:].withDefault { [] }
-task_token_stats.each { task_name, token_stats ->
-    new File("/Users/kholodilov/Temp/Masters/analysis/" + task_name + "_histogram.txt").withWriter { out ->
-        out.println "name " + task_name
-        token_stats.each { token, stats ->
-            out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
-            token_stats_aggregate[token] << stats
+task_similarities.each { task_name, similarities ->
+    def stats = new DescriptiveStatistics(similarities as double[])
+    println "${task_name}: ${stats.getMean()}±${stats.getStandardDeviation()}"
+    println "total similarities calculated: ${similarities.size()}"
+    def intervals_breakdown = [:].withDefault {0}
+    similarities.each { similarity ->
+        SIMILARITY_INTERVALS.each { interval ->
+            if (interval.contains(new BigDecimal(similarity))) {
+                intervals_breakdown[interval] = intervals_breakdown[interval] + 1
+            }
         }
     }
-}
-new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").withWriter { out ->
-    out.println "name " + TASKS.keySet().collect { it + " " + it + "_error" }.join(" ")
-    token_stats_aggregate.each { token, stats_list ->
-        out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
-    }
+    println intervals_breakdown
 }
 
-new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.gnuplot").withWriter { out ->
-    out << generateGnuplotScript("aggregate_histogram", TASKS.size())
+if (HISTOGRAMS)
+{
+    def token_stats_aggregate = [:].withDefault { [] }
+    task_token_stats.each { task_name, token_stats ->
+        new File("/Users/kholodilov/Temp/Masters/analysis/" + task_name + "_histogram.txt").withWriter { out ->
+            out.println "name " + task_name
+            token_stats.each { token, stats ->
+                out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
+                token_stats_aggregate[token] << stats
+            }
+        }
+    }
+    new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").withWriter { out ->
+        out.println "name " + TASKS.keySet().collect { it + " " + it + "_error" }.join(" ")
+        token_stats_aggregate.each { token, stats_list ->
+            out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
+        }
+    }
+
+    new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.gnuplot").withWriter { out ->
+        out << generateGnuplotScript("aggregate_histogram", TASKS.size())
+    }
 }
 
 private generateGnuplotScript(def filename, def datasets_count)
@@ -127,4 +145,9 @@ set style data histograms
 set xtic rotate by -90 scale 0
 plot \
 """ + (1..datasets_count).collect { i -> "\"${filename}.txt\" using ${i*2}:${i*2 + 1}:xtic(1) title col" }.join(", ")
+}
+
+private listAllTokens() {
+    PlagSym.valueStrings
+            .findAll { it != null }
 }
