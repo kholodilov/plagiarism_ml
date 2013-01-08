@@ -1,4 +1,6 @@
+import org.apache.commons.math3.stat.StatUtils
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
+@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import plag.parser.*;
 import plag.parser.java.*
 import plag.parser.report.*
@@ -35,7 +37,7 @@ TASKS.each { task_name, task_file_name ->
         }
     }
 
-    def token_frequencies_list = []
+    def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(analysis_results_directory, task_name)
@@ -65,8 +67,7 @@ TASKS.each { task_name, task_file_name ->
             }
 
             def total_tokens = fileDetectionResult.tokensA.size()
-            def token_frequencies = token_counts.collectEntries { key, value -> [key, value / total_tokens]}
-            token_frequencies_list.add(token_frequencies)
+            token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
 
             sum_similarities += fileDetectionResult.similarityA
             comparisons_count++
@@ -85,15 +86,8 @@ TASKS.each { task_name, task_file_name ->
         }
     }
     task_average_similarities[task_name] = sum_similarities / comparisons_count
-    def token_frequencies_sums = [:]
-    listAllTokens().each { token_frequencies_sums.put(it, 0.0) }
-    listAllTokens().each { token ->
-        token_frequencies_list.each { token_frequencies ->
-            token_frequencies_sums.put(token, token_frequencies_sums[token] + token_frequencies[token])
-        }
-    }
     task_average_token_frequencies[task_name] =
-        token_frequencies_sums.collectEntries { token, frequencies_sum -> [token , frequencies_sum / comparisons_count]}
+        token_frequencies.collectEntries { token, frequencies -> [token , StatUtils.mean(frequencies as double[])]}
 }
 
 private listAllTokens() {
