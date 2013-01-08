@@ -1,4 +1,5 @@
 import org.apache.commons.math3.stat.StatUtils
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import plag.parser.*;
@@ -22,7 +23,7 @@ def test_data_directory = new File("/Users/kholodilov/Temp/Masters/test_data")
 def analysis_results_directory = new File("/Users/kholodilov/Temp/Masters/analysis/tasks/")
 
 def task_average_similarities = [:]
-def task_average_token_frequencies = [:]
+def task_token_stats = [:]
 
 TASKS.each { task_name, task_file_name ->
     println "Processing ${task_name}"
@@ -86,8 +87,8 @@ TASKS.each { task_name, task_file_name ->
         }
     }
     task_average_similarities[task_name] = sum_similarities / comparisons_count
-    task_average_token_frequencies[task_name] =
-        token_frequencies.collectEntries { token, frequencies -> [token , StatUtils.mean(frequencies as double[])]}
+    task_token_stats[task_name] =
+        token_frequencies.collectEntries { token, frequencies -> [token , new DescriptiveStatistics(frequencies as double[])]}
 }
 
 private listAllTokens() {
@@ -96,19 +97,19 @@ private listAllTokens() {
 }
 
 println task_average_similarities
-def average_token_frequencies_aggregate = [:]
-task_average_token_frequencies.each { task_name, average_token_frequencies ->
+def token_stats_aggregate = [:].withDefault { [] }
+task_token_stats.each { task_name, token_stats ->
     new File("/Users/kholodilov/Temp/Masters/analysis/" + task_name + "_histogram.txt").withWriter { out ->
         out.println "name " + task_name
-        average_token_frequencies.each { token, average_frequency ->
-            out.println token + " " + average_frequency
-            average_token_frequencies_aggregate.get(token, []) << average_frequency
+        token_stats.each { token, stats ->
+            out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
+            token_stats_aggregate[token] << stats
         }
     }
 }
 new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").withWriter { out ->
-    out.println "name " + TASKS.keySet().join(" ")
-    average_token_frequencies_aggregate.each { token, average_frequencies ->
-        out.println token + " " + average_frequencies.join(" ")
+    out.println "name " + TASKS.keySet().collect { it + " " + it + "_error" }.join(" ")
+    token_stats_aggregate.each { token, stats_list ->
+        out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
     }
 }
