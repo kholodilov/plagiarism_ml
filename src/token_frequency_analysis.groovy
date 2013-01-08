@@ -5,7 +5,11 @@ import plag.parser.report.*
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
-final TASKS = ["array1" : "Array3dImpl.java", "collections2" : "WordCounterImpl.java"]
+final TASKS = [
+                "array1" : "Array3dImpl.java",
+                "collections2" : "WordCounterImpl.java",
+                "reflection0" : "ReflectionsImpl.java"
+              ]
 final REPORTING = false
 
 Stats.newCounter("files_to_parse");
@@ -98,12 +102,19 @@ private listAllTokens() {
 }
 
 println task_average_similarities
-
+def average_token_frequencies_aggregate = [:]
 task_average_token_frequencies.each { task_name, average_token_frequencies ->
     new File("/Users/kholodilov/Temp/Masters/analysis/" + task_name + "_histogram.txt").withWriter { out ->
         out.println "name " + task_name
         average_token_frequencies.each { token, average_frequency ->
             out.println token + " " + average_frequency
+            average_token_frequencies_aggregate.get(token, []) << average_frequency
         }
+    }
+}
+new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").withWriter { out ->
+    out.println "name " + TASKS.keySet().join(" ")
+    average_token_frequencies_aggregate.each { token, average_frequencies ->
+        out.println token + " " + average_frequencies.join(" ")
     }
 }
