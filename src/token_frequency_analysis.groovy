@@ -17,7 +17,7 @@ final TASKS = [
 final REPORTING = false
 final HISTOGRAMS = false
 
-final NUMBER_INTERVALS = 7
+final NUMBER_INTERVALS = 5
 final SIMILARITY_INTERVALS =
     (0..NUMBER_INTERVALS-1)
             .collect { center ->
@@ -28,8 +28,10 @@ Stats.newCounter("files_to_parse");
 Stats.newCounter("file_comparisons");
 Debug.setEnabled(false)
 
-def test_data_directory = new File("/Users/kholodilov/Temp/Masters/test_data")
-def analysis_results_directory = new File("/Users/kholodilov/Temp/Masters/analysis/tasks/")
+def work_directory = new File(args[0])
+def test_data_directory = new File(work_directory, "test_data")
+def results_directory = new File(work_directory, "results")
+def comparison_results_directory = new File(results_directory, "comparison")
 
 def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
@@ -50,7 +52,7 @@ TASKS.each { task_name, task_file_name ->
     def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
-    def task_results_directory = new File(analysis_results_directory, task_name)
+    def task_results_directory = new File(comparison_results_directory, task_name)
     task_results_directory.mkdirs()
     for (int i = 0; i < task_files.size(); i++)
     {
@@ -115,7 +117,7 @@ if (HISTOGRAMS)
 {
     def token_stats_aggregate = [:].withDefault { [] }
     task_token_stats.each { task_name, token_stats ->
-        new File("/Users/kholodilov/Temp/Masters/analysis/" + task_name + "_histogram.txt").withWriter { out ->
+        new File(results_directory, task_name + "_histogram.txt").withWriter { out ->
             out.println "name " + task_name
             token_stats.each { token, stats ->
                 out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
@@ -123,14 +125,14 @@ if (HISTOGRAMS)
             }
         }
     }
-    new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.txt").withWriter { out ->
+    new File(results_directory, "aggregate_histogram.txt").withWriter { out ->
         out.println "name " + TASKS.keySet().collect { it + " " + it + "_error" }.join(" ")
         token_stats_aggregate.each { token, stats_list ->
             out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
         }
     }
 
-    new File("/Users/kholodilov/Temp/Masters/analysis/aggregate_histogram.gnuplot").withWriter { out ->
+    new File(results_directory, "aggregate_histogram.gnuplot").withWriter { out ->
         out << generateGnuplotScript("aggregate_histogram", TASKS.size())
     }
 }
