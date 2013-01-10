@@ -10,12 +10,12 @@ import static com.madgag.interval.SimpleInterval.interval
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
 final TASKS = [
-                "array1" : "Array3dImpl.java",
-                "collections2" : "WordCounterImpl.java",
-                "reflection0" : "ReflectionsImpl.java"
+                new Task("array1", "Array3dImpl.java"),
+                new Task("collections2", "WordCounterImpl.java"),
+                new Task("reflection0", "ReflectionsImpl.java")
               ]
-final REPORTING = false
-final HISTOGRAMS = false
+final REPORTING = true
+final HISTOGRAMS = true
 
 final NUMBER_INTERVALS = 5
 final SIMILARITY_INTERVALS =
@@ -36,30 +36,29 @@ def comparison_results_directory = new File(results_directory, "comparison")
 def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
-TASKS.each { task_name, task_file_name ->
-    println "Processing ${task_name}"
-    def task_files = []
-    def task_authors = []
-    test_data_directory.eachDir { student_dir ->
-        def task_file = new File(student_dir, "ru/ipccenter/deadline1/" + task_name + "/" + task_file_name)
-        if (task_file.exists())
+TASKS.each { task ->
+    println "Processing ${task.name}"
+
+    List<TaskSolution> task_solutions = []
+    test_data_directory.eachDir { author_dir ->
+        def solution_file = new File(author_dir, "ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
+        if (solution_file.exists())
         {
-            task_files.add(task_file)
-            task_authors.add(student_dir.name)
+            task_solutions.add(new TaskSolution(task, new Author(author_dir.name), solution_file))
         }
     }
 
     def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
-    def task_results_directory = new File(comparison_results_directory, task_name)
+    def task_results_directory = new File(comparison_results_directory, task.name)
     task_results_directory.mkdirs()
-    for (int i = 0; i < task_files.size(); i++)
+    for (int i = 0; i < task_solutions.size(); i++)
     {
-        for (int j = i + 1; j < task_files.size(); j++)
+        for (int j = i + 1; j < task_solutions.size(); j++)
         {
-            def submission1 = new SingleFileSubmission(task_files[i])
-            def submission2 = new SingleFileSubmission(task_files[j])
+            def submission1 = new SingleFileSubmission(task_solutions[i].file)
+            def submission2 = new SingleFileSubmission(task_solutions[j].file)
 
             def detectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
 
@@ -79,22 +78,23 @@ TASKS.each { task_name, task_file_name ->
             def total_tokens = fileDetectionResult.tokensA.size()
             token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
 
-            task_similarities[task_name] << fileDetectionResult.similarityA
+            task_similarities[task.name] << fileDetectionResult.similarityA
 
             if (REPORTING)
             {
-                def analysis_results =
-                    new File(task_results_directory, task_authors[i] + "_" + task_authors[j] + ".txt")
+                def analysis_results = new File(task_results_directory,
+                        task_solutions[i].author.name + "_" + task_solutions[j].author.name + ".txt")
 
                 analysis_results.withOutputStream { out ->
                     def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
                     repGen.generateReport(fileDetectionResult)
                 }
-                println task_name + " " + task_authors[i] + " " + task_authors[j] + " " + fileDetectionResult.similarityA
+                println task.name + " " + task_solutions[i].author.name + "_" + task_solutions[j].author.name +
+                        " " + fileDetectionResult.similarityA
             }
         }
     }
-    task_token_stats[task_name] =
+    task_token_stats[task.name] =
         token_frequencies.collectEntries { token, frequencies -> [token , new DescriptiveStatistics(frequencies as double[])]}
 }
 
@@ -126,7 +126,7 @@ if (HISTOGRAMS)
         }
     }
     new File(results_directory, "aggregate_histogram.txt").withWriter { out ->
-        out.println "name " + TASKS.keySet().collect { it + " " + it + "_error" }.join(" ")
+        out.println "name " + TASKS.collect {task -> task.name + " " + task.name + "_error" }.join(" ")
         token_stats_aggregate.each { token, stats_list ->
             out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
         }
@@ -152,4 +152,52 @@ plot \
 private listAllTokens() {
     PlagSym.valueStrings
             .findAll { it != null }
+}
+
+class Author
+{
+    final String name
+
+    Author(String name) {
+        this.name = name
+    }
+}
+
+class Task
+{
+    final String name
+    final String filename
+
+    Task(String name, String filename) {
+        this.name = name
+        this.filename = filename
+    }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (getClass() != o.class) return false
+
+        Task task = (Task) o
+
+        if (name != task.name) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return name.hashCode()
+    }
+}
+
+class TaskSolution
+{
+    final Task task
+    final Author author
+    final File file
+
+    TaskSolution(Task task, Author author, File file) {
+        this.task = task
+        this.author = author
+        this.file = file
+    }
 }
