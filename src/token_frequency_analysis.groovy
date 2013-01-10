@@ -36,29 +36,23 @@ def comparison_results_directory = new File(results_directory, "comparison")
 def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
+Map<Task, List<Solution>> task_solutions = findAllSolutions(TASKS, test_data_directory)
+
 TASKS.each { task ->
     println "Processing ${task.name}"
 
-    List<TaskSolution> task_solutions = []
-    test_data_directory.eachDir { author_dir ->
-        def solution_file = new File(author_dir, "ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
-        if (solution_file.exists())
-        {
-            task_solutions.add(new TaskSolution(task, new Author(author_dir.name), solution_file))
-        }
-    }
-
+    List<Solution> solutions = task_solutions[task]
     def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(comparison_results_directory, task.name)
     task_results_directory.mkdirs()
-    for (int i = 0; i < task_solutions.size(); i++)
+    for (int i = 0; i < solutions.size(); i++)
     {
-        for (int j = i + 1; j < task_solutions.size(); j++)
+        for (int j = i + 1; j < solutions.size(); j++)
         {
-            def submission1 = new SingleFileSubmission(task_solutions[i].file)
-            def submission2 = new SingleFileSubmission(task_solutions[j].file)
+            def submission1 = new SingleFileSubmission(solutions[i].file)
+            def submission2 = new SingleFileSubmission(solutions[j].file)
 
             def detectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
 
@@ -83,13 +77,13 @@ TASKS.each { task ->
             if (REPORTING)
             {
                 def analysis_results = new File(task_results_directory,
-                        task_solutions[i].author.name + "_" + task_solutions[j].author.name + ".txt")
+                        solutions[i].author.name + "_" + solutions[j].author.name + ".txt")
 
                 analysis_results.withOutputStream { out ->
                     def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
                     repGen.generateReport(fileDetectionResult)
                 }
-                println task.name + " " + task_solutions[i].author.name + "_" + task_solutions[j].author.name +
+                println task.name + " " + solutions[i].author.name + "_" + solutions[j].author.name +
                         " " + fileDetectionResult.similarityA
             }
         }
@@ -154,6 +148,20 @@ private listAllTokens() {
             .findAll { it != null }
 }
 
+private Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> TASKS, File test_data_directory) {
+    Map<Task, List<Solution>> task_solutions = [:].withDefault { [] }
+
+    TASKS.each { task ->
+        test_data_directory.eachDir { author_dir ->
+            def solution_file = new File(author_dir, "ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
+            if (solution_file.exists()) {
+                task_solutions[task].add(new Solution(task, new Author(author_dir.name), solution_file))
+            }
+        }
+    }
+    task_solutions
+}
+
 class Author
 {
     final String name
@@ -189,13 +197,13 @@ class Task
     }
 }
 
-class TaskSolution
+class Solution
 {
     final Task task
     final Author author
     final File file
 
-    TaskSolution(Task task, Author author, File file) {
+    Solution(Task task, Author author, File file) {
         this.task = task
         this.author = author
         this.file = file
