@@ -7,6 +7,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 @Grab(group='com.madgag', module='util-intervals', version='1.33')
 import static com.madgag.interval.SimpleInterval.interval
 
+import ru.ipccenter.plagiarism.*
+
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
 final TASKS = [
@@ -36,56 +38,52 @@ def comparison_results_directory = new File(results_directory, "comparison")
 def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
-Map<Task, List<Solution>> task_solutions = findAllSolutions(TASKS, test_data_directory)
+Map<Task, List<SolutionsPair>> task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
 
 TASKS.each { task ->
     println "Processing ${task.name}"
 
-    List<Solution> solutions = task_solutions[task]
+    List<SolutionsPair> solution_pairs = task_solution_pairs[task]
     def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(comparison_results_directory, task.name)
     task_results_directory.mkdirs()
-    for (int i = 0; i < solutions.size(); i++)
-    {
-        for (int j = i + 1; j < solutions.size(); j++)
+    solution_pairs.each{ pair ->
+        def submission1 = new SingleFileSubmission(pair.solution1.file)
+        def submission2 = new SingleFileSubmission(pair.solution2.file)
+
+        def detectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
+
+        def token_counts = [:]
+        listAllTokens().each { token_counts.put(it, 0) }
+
+        DetectionResult fileDetectionResult = detectionResult.getFileDetectionResults()[0]
+        for (MatchedTile tile : fileDetectionResult.getMatches())
         {
-            def submission1 = new SingleFileSubmission(solutions[i].file)
-            def submission2 = new SingleFileSubmission(solutions[j].file)
-
-            def detectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
-
-            def token_counts = [:]
-            listAllTokens().each { token_counts.put(it, 0) }
-
-            DetectionResult fileDetectionResult = detectionResult.getFileDetectionResults()[0]
-            for (MatchedTile tile : fileDetectionResult.getMatches())
+            def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
+            for (String token : tokens_in_match)
             {
-                def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
-                for (String token : tokens_in_match)
-                {
-                    token_counts.put(token, token_counts[token] + 1)
-                }
+                token_counts.put(token, token_counts[token] + 1)
             }
+        }
 
-            def total_tokens = fileDetectionResult.tokensA.size()
-            token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
+        def total_tokens = fileDetectionResult.tokensA.size()
+        token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
 
-            task_similarities[task.name] << fileDetectionResult.similarityA
+        task_similarities[task.name] << fileDetectionResult.similarityA
 
-            if (REPORTING)
-            {
-                def analysis_results = new File(task_results_directory,
-                        solutions[i].author.name + "_" + solutions[j].author.name + ".txt")
+        if (REPORTING)
+        {
+            def analysis_results = new File(task_results_directory,
+                    pair.solution1.author.name + "_" + pair.solution2.author.name + ".txt")
 
-                analysis_results.withOutputStream { out ->
-                    def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
-                    repGen.generateReport(fileDetectionResult)
-                }
-                println task.name + " " + solutions[i].author.name + "_" + solutions[j].author.name +
-                        " " + fileDetectionResult.similarityA
+            analysis_results.withOutputStream { out ->
+                def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
+                repGen.generateReport(fileDetectionResult)
             }
+            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
+                    " " + fileDetectionResult.similarityA
         }
     }
     task_token_stats[task.name] =
@@ -159,53 +157,20 @@ private Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> TASKS, File t
             }
         }
     }
-    task_solutions
+    return task_solutions
 }
 
-class Author
+private Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution>> task_solutions)
 {
-    final String name
-
-    Author(String name) {
-        this.name = name
+    Map<Task, List<SolutionsPair>> task_solution_pairs = [:].withDefault { [] }
+    task_solutions.each { task, solutions ->
+        for (int i = 0; i < solutions.size(); i++)
+        {
+            for (int j = i + 1; j < solutions.size(); j++)
+            {
+                task_solution_pairs[task] << new SolutionsPair(solutions[i], solutions[j])
+            }
+        }
     }
-}
-
-class Task
-{
-    final String name
-    final String filename
-
-    Task(String name, String filename) {
-        this.name = name
-        this.filename = filename
-    }
-
-    boolean equals(o) {
-        if (this.is(o)) return true
-        if (getClass() != o.class) return false
-
-        Task task = (Task) o
-
-        if (name != task.name) return false
-
-        return true
-    }
-
-    int hashCode() {
-        return name.hashCode()
-    }
-}
-
-class Solution
-{
-    final Task task
-    final Author author
-    final File file
-
-    Solution(Task task, Author author, File file) {
-        this.task = task
-        this.author = author
-        this.file = file
-    }
+    return task_solution_pairs
 }
