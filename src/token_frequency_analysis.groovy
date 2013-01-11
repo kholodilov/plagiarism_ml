@@ -35,6 +35,9 @@ final SIMILARITY_INTERVALS =
                 interval((center - 0.5) / (NUMBER_INTERVALS - 1), (center + 0.5) / (NUMBER_INTERVALS - 1))
             }
 
+final NO_MEAN_VALUE_THRESHOLD = -1.0
+final ZERO_MEAN_VALUE_THRESHOLD = 0.0
+
 Stats.newCounter("files_to_parse");
 Stats.newCounter("file_comparisons");
 Debug.setEnabled(false)
@@ -156,9 +159,16 @@ task_solution_pairs.each { task, solution_pairs ->
             println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
         }
 
-        generateTokenFrequencyHistogram("correctly_detected", task, correctly_detected_pairs, results_directory)
-        generateTokenFrequencyHistogram("lower_similarity", task, pairs_with_lower_detected_similarity, results_directory)
-        generateTokenFrequencyHistogram("higher_similarity", task, pairs_with_higher_detected_similarity, results_directory)
+        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
+        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
+        generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
+        generateAggregateTokenFrequencyHistogramForTask(
+                task,
+                ["lower_similarity", "correctly_detected", "higher_similarity"],
+                [pairs_with_lower_detected_similarity, correctly_detected_pairs, pairs_with_higher_detected_similarity],
+                results_directory,
+                ZERO_MEAN_VALUE_THRESHOLD
+        )
     }
 }
 
@@ -175,8 +185,9 @@ Map<String, StatisticalSummary> calculateTokenStats(List<SolutionsPair> solution
             }
 }
 
-private generateTokenFrequencyHistogram(String baseName, Task task, List<SolutionsPair> solutionsPairs, File output_directory) {
-    def results_directory
+private generateTokenFrequencyHistogram(
+        Task task, String baseName, List<SolutionsPair> solutionsPairs, File output_directory)
+{
     def histogram_name = "${task}_${baseName}_histogram"
     def data_file = new File(output_directory, histogram_name + ".txt")
     data_file.withWriter { out ->
@@ -188,6 +199,39 @@ private generateTokenFrequencyHistogram(String baseName, Task task, List<Solutio
     def gnuplot_script = new File(output_directory, histogram_name + ".gnuplot")
     gnuplot_script.withWriter { out ->
         out << generateGnuplotScript(histogram_name, 1)
+    }
+}
+
+private generateAggregateTokenFrequencyHistogramForTask(
+        Task task, List<String> baseNames, List<List<SolutionsPair>> solutionsPairsSet, File output_directory,
+        double meanValueThreshold)
+{
+    def histogram_name = "${task}_aggregate_histogram"
+
+    def data_file = new File(output_directory, histogram_name + ".txt")
+    data_file.withWriter { out ->
+        out.println "name " +
+                baseNames.collect { baseName -> "${task.name}_${baseName} ${task.name}_${baseName}_error" }.join(" ")
+
+        solutionsPairsSet
+            .collect { solutionsPairs ->
+                calculateTokenStats(solutionsPairs)
+            }
+            .collectEntries(new MultiValueMap()) { token_stats ->
+                token_stats
+            }
+            .findAll { token, stats_list ->
+                stats_list.find { stats -> stats.getMean() > meanValueThreshold } != null
+            }
+            .sort()
+            .each { token, stats_list ->
+                out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
+            }
+    }
+
+    def gnuplot_script = new File(output_directory, histogram_name + ".gnuplot")
+    gnuplot_script.withWriter { out ->
+        out << generateGnuplotScript(histogram_name, solutionsPairsSet.size())
     }
 }
 
