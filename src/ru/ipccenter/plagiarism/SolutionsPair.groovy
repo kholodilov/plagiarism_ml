@@ -11,7 +11,7 @@ public class SolutionsPair
 
     double estimatedSimilarity
     double detectedSimilarity
-    private Map<String, List<Double>> tokenFrequencies
+    private Map<String, Double> tokenFrequencies
 
     SolutionsPair(Solution solution1, Solution solution2)
     {
@@ -35,11 +35,11 @@ public class SolutionsPair
         this.detectedSimilarity = detectedSimilarity
     }
 
-    Map<String, List<Double>> getTokenFrequencies() {
+    Map<String, Double> getTokenFrequencies() {
         return tokenFrequencies
     }
 
-    void setTokenFrequencies(Map<String, List<Double>> tokenFrequencies) {
+    void setTokenFrequencies(Map<String, Double> tokenFrequencies) {
         this.tokenFrequencies = tokenFrequencies
     }
 }

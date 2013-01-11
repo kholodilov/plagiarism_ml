@@ -3,11 +3,16 @@ import plag.parser.*;
 import plag.parser.java.*
 import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 @Grab(group='commons-io', module='commons-io', version='2.4')
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FileUtils
+@Grab(group='commons-collections', module='commons-collections', version='3.2.1')
+import  org.apache.commons.collections.map.MultiValueMap
 @Grab(group='com.madgag', module='util-intervals', version='1.33')
 import static com.madgag.interval.SimpleInterval.interval
+import static com.madgag.interval.BeforeOrAfter.AFTER
+import static com.madgag.interval.BeforeOrAfter.BEFORE
 
 import ru.ipccenter.plagiarism.*
 import ru.ipccenter.plagiarism.util.*
@@ -20,8 +25,7 @@ final TASKS = [
                 new Task("reflection0", "ReflectionsImpl.java")
               ]
 
-final REPORTING = true
-final HISTOGRAMS = true
+final REPORTING = false
 final MANUAL_CHECKS = true
 
 final int NUMBER_INTERVALS = 5
@@ -41,9 +45,6 @@ def manual_checks_directory = new File(work_directory, "manual_checks")
 def results_directory = new File(work_directory, "results")
 def comparison_results_directory = new File(results_directory, "comparison")
 
-def task_similarities = [:].withDefault { [] }
-def task_token_stats = [:]
-
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
 Map<Task, List<SolutionsPair>> task_solution_pairs
@@ -59,7 +60,6 @@ else
 task_solution_pairs.each { task, solution_pairs ->
     println "Processing ${task}"
 
-    def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(comparison_results_directory, task.name)
@@ -83,12 +83,9 @@ task_solution_pairs.each { task, solution_pairs ->
             }
         }
 
-        def total_tokens = fileDetectionResult.tokensA.size()
-        token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
-
-        task_similarities[task.name] << fileDetectionResult.similarityA
         pair.setDetectedSimilarity(fileDetectionResult.similarityA)
-        pair.setTokenFrequencies(token_frequencies)
+        def total_tokens = fileDetectionResult.tokensA.size()
+        pair.setTokenFrequencies(token_counts.collectEntries { token, count -> [token, count / total_tokens] })
 
         if (REPORTING)
         {
@@ -103,14 +100,12 @@ task_solution_pairs.each { task, solution_pairs ->
                     " " + fileDetectionResult.similarityA
         }
     }
-    task_token_stats[task.name] =
-        token_frequencies.collectEntries { token, frequencies -> [token , new DescriptiveStatistics(frequencies as double[])]}
 }
 
 task_solution_pairs.each { task, solution_pairs ->
     def similarities = solution_pairs.collect { it.detectedSimilarity }
-    def stats = new DescriptiveStatistics(similarities as double[])
-    println "${task.name}: ${stats.getMean()}±${stats.getStandardDeviation()}"
+    def overall_stats = new DescriptiveStatistics(similarities as double[])
+    println "${task.name}: ${overall_stats.getMean()}±${overall_stats.getStandardDeviation()}"
     println "total pairs compared: ${solution_pairs.size()}"
     def intervals_breakdown = [:]
     SIMILARITY_INTERVALS.each { intervals_breakdown[it] = 0 }
@@ -123,42 +118,78 @@ task_solution_pairs.each { task, solution_pairs ->
     }
     println intervals_breakdown
 
-    def correctly_detected_pairs = solution_pairs.findAll { pair ->
-        SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) } ==
-        SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
-    }
-
-    println "Correctly detected pairs:"
-    correctly_detected_pairs.each { pair ->
-        println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
-    }
-}
-
-if (HISTOGRAMS)
-{
-    def token_stats_aggregate = [:].withDefault { [] }
-    task_token_stats.each { task_name, token_stats ->
-        new File(results_directory, task_name + "_histogram.txt").withWriter { out ->
-            out.println "name " + task_name
-            token_stats.each { token, stats ->
-                out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
-                token_stats_aggregate[token] << stats
-            }
+    if (MANUAL_CHECKS)
+    {
+        def correctly_detected_pairs = solution_pairs.findAll { pair ->
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) } ==
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
         }
-    }
-    new File(results_directory, "aggregate_histogram.txt").withWriter { out ->
-        out.println "name " + TASKS.collect {task -> task.name + " " + task.name + "_error" }.join(" ")
-        token_stats_aggregate.each { token, stats_list ->
-            out.println token + " " + stats_list.collect { it.getMean() + " " + it.getStandardDeviation() }.join(" ")
-        }
-    }
 
-    new File(results_directory, "aggregate_histogram.gnuplot").withWriter { out ->
-        out << generateGnuplotScript("aggregate_histogram", task_solution_pairs.size())
+        def pairs_with_lower_detected_similarity = solution_pairs.findAll { pair ->
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) }
+                .is(BEFORE,
+                    SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
+                )
+        }
+
+        def pairs_with_higher_detected_similarity = solution_pairs.findAll { pair ->
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) }
+                .is(AFTER,
+                    SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
+                )
+        }
+
+        println "# Correctly detected pairs (${correctly_detected_pairs.size()}):"
+        correctly_detected_pairs.each { pair ->
+            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+        }
+
+
+        println "# Pairs with lower detected similarity (${pairs_with_lower_detected_similarity.size()}):"
+        pairs_with_lower_detected_similarity.each { pair ->
+            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+        }
+
+
+        println "# Pairs with higher detected similarity (${pairs_with_higher_detected_similarity.size()}):"
+        pairs_with_higher_detected_similarity.each { pair ->
+            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+        }
+
+        generateTokenFrequencyHistogram("correctly_detected", task, correctly_detected_pairs, results_directory)
+        generateTokenFrequencyHistogram("lower_similarity", task, pairs_with_lower_detected_similarity, results_directory)
+        generateTokenFrequencyHistogram("higher_similarity", task, pairs_with_higher_detected_similarity, results_directory)
     }
 }
 
 // methods
+
+Map<String, StatisticalSummary> calculateTokenStats(List<SolutionsPair> solutionsPairs)
+{
+    return solutionsPairs
+            .collectEntries(new MultiValueMap()) { solutionsPair ->
+                solutionsPair.tokenFrequencies
+            }
+            .collectEntries() { token, frequencies ->
+                [token, new DescriptiveStatistics(frequencies as double[])]
+            }
+}
+
+private generateTokenFrequencyHistogram(String baseName, Task task, List<SolutionsPair> solutionsPairs, File output_directory) {
+    def results_directory
+    def histogram_name = "${task}_${baseName}_histogram"
+    def data_file = new File(output_directory, histogram_name + ".txt")
+    data_file.withWriter { out ->
+        out.println "name ${task.name} ${task.name}_error"
+        calculateTokenStats(solutionsPairs).sort().each { token, stats ->
+            out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
+        }
+    }
+    def gnuplot_script = new File(output_directory, histogram_name + ".gnuplot")
+    gnuplot_script.withWriter { out ->
+        out << generateGnuplotScript(histogram_name, 1)
+    }
+}
 
 def generateGnuplotScript(def filename, def datasets_count)
 {
