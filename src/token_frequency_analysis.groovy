@@ -4,10 +4,12 @@ import plag.parser.java.*
 import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+
 @Grab(group='com.madgag', module='util-intervals', version='1.33')
 import static com.madgag.interval.SimpleInterval.interval
 
 import ru.ipccenter.plagiarism.*
+import ru.ipccenter.plagiarism.util.*
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
@@ -32,6 +34,7 @@ Debug.setEnabled(false)
 
 def work_directory = new File(args[0])
 def test_data_directory = new File(work_directory, "test_data")
+def manual_checks_directory = new File(work_directory, "manual_checks")
 def results_directory = new File(work_directory, "results")
 def comparison_results_directory = new File(results_directory, "comparison")
 
@@ -39,6 +42,7 @@ def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
 Map<Task, List<SolutionsPair>> task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
+//Map<Task, List<SolutionsPair>> task_solution_pairs = loadManualChecksPairs(TASKS, manual_checks_directory)
 
 TASKS.each { task ->
     println "Processing ${task.name}"
@@ -129,7 +133,7 @@ if (HISTOGRAMS)
     }
 }
 
-private generateGnuplotScript(def filename, def datasets_count)
+def generateGnuplotScript(def filename, def datasets_count)
 {
     return """\
 set terminal postscript eps color "Sans" 8 solid
@@ -141,26 +145,41 @@ plot \
 """ + (1..datasets_count).collect { i -> "\"${filename}.txt\" using ${i*2}:${i*2 + 1}:xtic(1) title col" }.join(", ")
 }
 
-private listAllTokens() {
+def listAllTokens() {
     PlagSym.valueStrings
             .findAll { it != null }
 }
 
-private Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> TASKS, File test_data_directory) {
+Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> tasks, File test_data_directory) {
     Map<Task, List<Solution>> task_solutions = [:].withDefault { [] }
 
-    TASKS.each { task ->
+    tasks.each { task ->
         test_data_directory.eachDir { author_dir ->
-            def solution_file = new File(author_dir, "ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
-            if (solution_file.exists()) {
-                task_solutions[task].add(new Solution(task, new Author(author_dir.name), solution_file))
+            try {
+                task_solutions[task].add(
+                        findSolutionInStandardStructure(test_data_directory, task, new Author(author_dir.name))
+                )
+            } catch (SolutionNotFoundException e)
+            {
+                // skip missing solution
             }
         }
     }
     return task_solutions
 }
 
-private Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution>> task_solutions)
+Solution findSolutionInStandardStructure(File test_data_directory, Task task, Author author)
+{
+    def solution_file = new File(test_data_directory,
+            author.name + "/ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
+    if (!solution_file.exists())
+    {
+        throw new SolutionNotFoundException("Solution of task ${task} for author ${author} not found")
+    }
+    return new Solution(task, author, solution_file)
+}
+
+Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution>> task_solutions)
 {
     Map<Task, List<SolutionsPair>> task_solution_pairs = [:].withDefault { [] }
     task_solutions.each { task, solutions ->
@@ -173,4 +192,28 @@ private Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution
         }
     }
     return task_solution_pairs
+}
+
+Map<Task, List<SolutionsPair>> loadManualChecksPairs(List<Task> tasks, File manual_checks_directory) {
+    Map<Task, List<SolutionsPair>> task_solution_pairs = [:]
+    tasks.each { task ->
+        def manual_checks_file = new File(manual_checks_directory, task.name + ".txt")
+        List<SolutionsPair> solution_pairs = []
+        if (manual_checks_file.exists())
+        {
+            manual_checks_file.eachLine { solutions_pair_line ->
+                def solutions_pair = parseSolutionsPairLine(task, solutions_pair_line)
+                solution_pairs.add(solutions_pair)
+            }
+            task_solution_pairs[task] = solution_pairs
+        }
+    }
+    return task_solution_pairs;
+}
+
+SolutionsPair parseSolutionsPairLine(Task task, String solutions_pair_line)
+{
+    def matcher = solutions_pair_line =~ /(\S) (\S) (\d)/
+    if (!matcher.matches()) return null;
+    //def solutions_pair = new SolutionsPair(new Solution(task, mat))
 }

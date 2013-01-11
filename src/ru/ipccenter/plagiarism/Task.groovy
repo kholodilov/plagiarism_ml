@@ -1,11 +1,8 @@
 package ru.ipccenter.plagiarism
 
 /**
- * Created with IntelliJ IDEA.
- * User: dmitry
- * Date: 1/11/13
- * Time: 2:05 AM
- * To change this template use File | Settings | File Templates.
+ * @author dmitry
+ * @date 1/11/13
  */
 class Task
 {
@@ -30,5 +27,10 @@ class Task
 
     int hashCode() {
         return name.hashCode()
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
