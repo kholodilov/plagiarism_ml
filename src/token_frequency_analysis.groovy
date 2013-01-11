@@ -105,6 +105,8 @@ task_solution_pairs.each { task, solution_pairs ->
     }
 }
 
+def pairs_with_higher_detected_similarity_lists = []
+
 task_solution_pairs.each { task, solution_pairs ->
     def similarities = solution_pairs.collect { it.detectedSimilarity }
     def overall_stats = new DescriptiveStatistics(similarities as double[])
@@ -162,16 +164,27 @@ task_solution_pairs.each { task, solution_pairs ->
         generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
         generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
         generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
-        generateAggregateTokenFrequencyHistogramForTask(
-                task,
+        generateAggregateTokenFrequencyHistogram(
+                task.name,
                 ["lower_similarity", "correctly_detected", "higher_similarity"],
                 [pairs_with_lower_detected_similarity, correctly_detected_pairs, pairs_with_higher_detected_similarity],
                 results_directory,
                 ZERO_MEAN_VALUE_THRESHOLD
         )
+
+        pairs_with_higher_detected_similarity_lists.add(pairs_with_higher_detected_similarity)
     }
 }
-
+if (MANUAL_CHECKS)
+{
+    generateAggregateTokenFrequencyHistogram(
+            "higher_similarity",
+            task_solution_pairs.collect { task, _ -> "${task.name}_higher_similarity" },
+            pairs_with_higher_detected_similarity_lists,
+            results_directory,
+            ZERO_MEAN_VALUE_THRESHOLD
+    )
+}
 // methods
 
 Map<String, StatisticalSummary> calculateTokenStats(List<SolutionsPair> solutionsPairs)
@@ -202,16 +215,16 @@ private generateTokenFrequencyHistogram(
     }
 }
 
-private generateAggregateTokenFrequencyHistogramForTask(
-        Task task, List<String> baseNames, List<List<SolutionsPair>> solutionsPairsSet, File output_directory,
+private generateAggregateTokenFrequencyHistogram(
+        String histogramName, List<String> baseNames, List<List<SolutionsPair>> solutionsPairsSet, File output_directory,
         double meanValueThreshold)
 {
-    def histogram_name = "${task}_aggregate_histogram"
+    def histogram_name = "${histogramName}_aggregate_histogram"
 
     def data_file = new File(output_directory, histogram_name + ".txt")
     data_file.withWriter { out ->
         out.println "name " +
-                baseNames.collect { baseName -> "${task.name}_${baseName} ${task.name}_${baseName}_error" }.join(" ")
+                baseNames.collect { baseName -> "${baseName} ${baseName}_error" }.join(" ")
 
         solutionsPairsSet
             .collect { solutionsPairs ->
