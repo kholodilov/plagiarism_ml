@@ -4,7 +4,8 @@ import plag.parser.java.*
 import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-
+@Grab(group='commons-io', module='commons-io', version='2.4')
+import org.apache.commons.io.FileUtils;
 @Grab(group='com.madgag', module='util-intervals', version='1.33')
 import static com.madgag.interval.SimpleInterval.interval
 
@@ -21,7 +22,7 @@ final TASKS = [
 final REPORTING = true
 final HISTOGRAMS = true
 
-final NUMBER_INTERVALS = 5
+final int NUMBER_INTERVALS = 5
 final SIMILARITY_INTERVALS =
     (0..NUMBER_INTERVALS-1)
             .collect { center ->
@@ -41,13 +42,15 @@ def comparison_results_directory = new File(results_directory, "comparison")
 def task_similarities = [:].withDefault { [] }
 def task_token_stats = [:]
 
-Map<Task, List<SolutionsPair>> task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
-//Map<Task, List<SolutionsPair>> task_solution_pairs = loadManualChecksPairs(TASKS, manual_checks_directory)
+if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
-TASKS.each { task ->
-    println "Processing ${task.name}"
+//Map<Task, List<SolutionsPair>> task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
+Map<Task, List<SolutionsPair>> task_solution_pairs =
+    loadManualChecksPairs(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS)
 
-    List<SolutionsPair> solution_pairs = task_solution_pairs[task]
+task_solution_pairs.each { task, solution_pairs ->
+    println "Processing ${task}"
+
     def token_frequencies = [:].withDefault { [] }
     def tokenizer = new JavaTokenizer()
     def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
@@ -98,7 +101,8 @@ task_similarities.each { task_name, similarities ->
     def stats = new DescriptiveStatistics(similarities as double[])
     println "${task_name}: ${stats.getMean()}±${stats.getStandardDeviation()}"
     println "total similarities calculated: ${similarities.size()}"
-    def intervals_breakdown = [:].withDefault {0}
+    def intervals_breakdown = [:]
+    SIMILARITY_INTERVALS.each { intervals_breakdown[it] = 0 }
     similarities.each { similarity ->
         SIMILARITY_INTERVALS.each { interval ->
             if (interval.contains(new BigDecimal(similarity))) {
@@ -129,7 +133,7 @@ if (HISTOGRAMS)
     }
 
     new File(results_directory, "aggregate_histogram.gnuplot").withWriter { out ->
-        out << generateGnuplotScript("aggregate_histogram", TASKS.size())
+        out << generateGnuplotScript("aggregate_histogram", task_solution_pairs.size())
     }
 }
 
@@ -194,7 +198,8 @@ Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution>> task_
     return task_solution_pairs
 }
 
-Map<Task, List<SolutionsPair>> loadManualChecksPairs(List<Task> tasks, File manual_checks_directory) {
+Map<Task, List<SolutionsPair>> loadManualChecksPairs(
+        List<Task> tasks, File manual_checks_directory, File test_data_directory, def numberOfIntervals) {
     Map<Task, List<SolutionsPair>> task_solution_pairs = [:]
     tasks.each { task ->
         def manual_checks_file = new File(manual_checks_directory, task.name + ".txt")
@@ -202,8 +207,17 @@ Map<Task, List<SolutionsPair>> loadManualChecksPairs(List<Task> tasks, File manu
         if (manual_checks_file.exists())
         {
             manual_checks_file.eachLine { solutions_pair_line ->
-                def solutions_pair = parseSolutionsPairLine(task, solutions_pair_line)
-                solution_pairs.add(solutions_pair)
+                try {
+                    solution_pairs.add(
+                            loadSolutionsPair(test_data_directory, task, solutions_pair_line, numberOfIntervals)
+                    )
+                } catch (ManualCheckParseException e)
+                {
+                    println e.message
+                } catch (SolutionNotFoundException e)
+                {
+                    println e.message
+                }
             }
             task_solution_pairs[task] = solution_pairs
         }
@@ -211,9 +225,23 @@ Map<Task, List<SolutionsPair>> loadManualChecksPairs(List<Task> tasks, File manu
     return task_solution_pairs;
 }
 
-SolutionsPair parseSolutionsPairLine(Task task, String solutions_pair_line)
+SolutionsPair loadSolutionsPair(File test_data_directory, Task task, String solutions_pair_line, int numberOfIntervals)
 {
-    def matcher = solutions_pair_line =~ /(\S) (\S) (\d)/
-    if (!matcher.matches()) return null;
-    //def solutions_pair = new SolutionsPair(new Solution(task, mat))
+    def matcher = solutions_pair_line =~ /(\S+) (\S+) (\d+)/
+    if (!matcher.matches())
+    {
+        throw new ManualCheckParseException("Failed to parse manual check line: " + solutions_pair_line);
+    }
+
+    def author1 = new Author(matcher.group(1))
+    def author2 = new Author(matcher.group(2))
+    def estimatedSimilarity = Integer.parseInt(matcher.group(3)) / (numberOfIntervals - 1)
+
+    def solution1 = findSolutionInStandardStructure(test_data_directory, task, author1)
+    def solution2 = findSolutionInStandardStructure(test_data_directory, task, author2)
+
+    def solutions_pair = new SolutionsPair(solution1, solution2)
+    solutions_pair.setEstimatedSimilarity(estimatedSimilarity);
+
+    return solutions_pair;
 }
