@@ -19,8 +19,10 @@ final TASKS = [
                 new Task("collections2", "WordCounterImpl.java"),
                 new Task("reflection0", "ReflectionsImpl.java")
               ]
+
 final REPORTING = true
 final HISTOGRAMS = true
+final MANUAL_CHECKS = true
 
 final int NUMBER_INTERVALS = 5
 final SIMILARITY_INTERVALS =
@@ -44,9 +46,15 @@ def task_token_stats = [:]
 
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
-//Map<Task, List<SolutionsPair>> task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
-Map<Task, List<SolutionsPair>> task_solution_pairs =
-    loadManualChecksPairs(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS)
+Map<Task, List<SolutionsPair>> task_solution_pairs
+if (MANUAL_CHECKS)
+{
+    task_solution_pairs = loadManualChecksPairs(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS)
+}
+else
+{
+   task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
+}
 
 task_solution_pairs.each { task, solution_pairs ->
     println "Processing ${task}"
@@ -79,6 +87,8 @@ task_solution_pairs.each { task, solution_pairs ->
         token_counts.each { token, count -> token_frequencies[token] << count / total_tokens }
 
         task_similarities[task.name] << fileDetectionResult.similarityA
+        pair.setDetectedSimilarity(fileDetectionResult.similarityA)
+        pair.setTokenFrequencies(token_frequencies)
 
         if (REPORTING)
         {
@@ -97,10 +107,11 @@ task_solution_pairs.each { task, solution_pairs ->
         token_frequencies.collectEntries { token, frequencies -> [token , new DescriptiveStatistics(frequencies as double[])]}
 }
 
-task_similarities.each { task_name, similarities ->
+task_solution_pairs.each { task, solution_pairs ->
+    def similarities = solution_pairs.collect { it.detectedSimilarity }
     def stats = new DescriptiveStatistics(similarities as double[])
-    println "${task_name}: ${stats.getMean()}±${stats.getStandardDeviation()}"
-    println "total similarities calculated: ${similarities.size()}"
+    println "${task.name}: ${stats.getMean()}±${stats.getStandardDeviation()}"
+    println "total pairs compared: ${solution_pairs.size()}"
     def intervals_breakdown = [:]
     SIMILARITY_INTERVALS.each { intervals_breakdown[it] = 0 }
     similarities.each { similarity ->
@@ -111,6 +122,16 @@ task_similarities.each { task_name, similarities ->
         }
     }
     println intervals_breakdown
+
+    def correctly_detected_pairs = solution_pairs.findAll { pair ->
+        SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) } ==
+        SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
+    }
+
+    println "Correctly detected pairs:"
+    correctly_detected_pairs.each { pair ->
+        println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+    }
 }
 
 if (HISTOGRAMS)
@@ -136,6 +157,8 @@ if (HISTOGRAMS)
         out << generateGnuplotScript("aggregate_histogram", task_solution_pairs.size())
     }
 }
+
+// methods
 
 def generateGnuplotScript(def filename, def datasets_count)
 {
