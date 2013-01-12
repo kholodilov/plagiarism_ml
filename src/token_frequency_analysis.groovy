@@ -25,7 +25,7 @@ final TASKS = [
                 new Task("reflection0", "ReflectionsImpl.java")
               ]
 
-final REPORTING = false
+final REPORTING = true
 final MANUAL_CHECKS = true
 
 final int NUMBER_INTERVALS = 5
@@ -99,8 +99,8 @@ task_solution_pairs.each { task, solution_pairs ->
                 def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
                 repGen.generateReport(fileDetectionResult)
             }
-            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
-                    " " + fileDetectionResult.similarityA
+//            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
+//                    " " + fileDetectionResult.similarityA
         }
     }
 }
@@ -161,9 +161,9 @@ task_solution_pairs.each { task, solution_pairs ->
             println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
         }
 
-        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
-        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
-        generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
+//        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
+//        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
+//        generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
         generateAggregateTokenFrequencyHistogram(
                 task.name,
                 ["lower_similarity", "correctly_detected", "higher_similarity"],
