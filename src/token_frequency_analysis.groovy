@@ -166,8 +166,8 @@ task_solution_pairs.each { task, solution_pairs ->
 //        generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
         generateAggregateTokenFrequencyHistogram(
                 task.name,
-                ["lower_similarity", "correctly_detected", "higher_similarity"],
-                [pairs_with_lower_detected_similarity, correctly_detected_pairs, pairs_with_higher_detected_similarity],
+                ["correctly_detected", "higher_similarity"],
+                [correctly_detected_pairs, pairs_with_higher_detected_similarity],
                 results_directory,
                 ZERO_MEAN_VALUE_THRESHOLD
         )
@@ -204,7 +204,7 @@ private generateTokenFrequencyHistogram(
     def histogram_name = "${task}_${baseName}_histogram"
     def data_file = new File(output_directory, histogram_name + ".txt")
     data_file.withWriter { out ->
-        out.println "name ${task.name} ${task.name}_error"
+        out.println "name ${task.name} ${task.name}"
         calculateTokenStats(solutionsPairs).sort().each { token, stats ->
             out.println token + " " + stats.getMean() + " " + stats.getStandardDeviation()
         }
@@ -224,7 +224,7 @@ private generateAggregateTokenFrequencyHistogram(
     def data_file = new File(output_directory, histogram_name + ".txt")
     data_file.withWriter { out ->
         out.println "name " +
-                baseNames.collect { baseName -> "${baseName} ${baseName}_error" }.join(" ")
+                baseNames.collect { baseName -> "${baseName} ${baseName}" }.join(" ")
 
         solutionsPairsSet
             .collect { solutionsPairs ->
