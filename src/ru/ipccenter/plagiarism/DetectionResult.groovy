@@ -14,12 +14,6 @@ class DetectionResult
         this.similarity = similarity
     }
 
-    DetectionResult(double similarity, String report)
-    {
-        this.similarity = similarity
-        this.report = report
-    }
-
     double getSimilarity()
     {
         return similarity

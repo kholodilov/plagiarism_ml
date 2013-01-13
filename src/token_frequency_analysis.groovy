@@ -16,7 +16,7 @@ import static com.madgag.interval.BeforeOrAfter.BEFORE
 
 import ru.ipccenter.plagiarism.*
 import ru.ipccenter.plagiarism.util.*
-import ru.ipccenter.plagiarism.DetectionResult
+import ru.ipccenter.plagiarism.detectors.*
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
@@ -73,13 +73,13 @@ task_solution_pairs.each { task, solution_pairs ->
         def submission1 = new SingleFileSubmission(pair.solution1.file)
         def submission2 = new SingleFileSubmission(pair.solution2.file)
 
-        def detectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
+        def plaggieDetectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
 
         def token_counts = [:]
         listAllTokens().each { token_counts.put(it, 0) }
 
-        def fileDetectionResult = detectionResult.getFileDetectionResults()[0]
-        for (MatchedTile tile : fileDetectionResult.getMatches())
+        def plaggieFileDetectionResult = plaggieDetectionResult.getFileDetectionResults()[0]
+        for (MatchedTile tile : plaggieFileDetectionResult.getMatches())
         {
             def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
             for (String token : tokens_in_match)
@@ -88,9 +88,11 @@ task_solution_pairs.each { task, solution_pairs ->
             }
         }
 
-        pair.addDetectionResult(PLAGGIE_DETECTOR, new DetectionResult(fileDetectionResult.similarityA))
-        def total_tokens = fileDetectionResult.tokensA.size()
-        pair.setTokenFrequencies(token_counts.collectEntries { token, count -> [token, count / total_tokens] })
+        def total_tokens = plaggieFileDetectionResult.tokensA.size()
+        def tokenFrequencies = token_counts.collectEntries { token, count -> [token, count / total_tokens] }
+
+        def detectionResult = new PlaggieDetectionResult(plaggieFileDetectionResult.similarityA, tokenFrequencies)
+        pair.addDetectionResult(PLAGGIE_DETECTOR, detectionResult)
 
         if (REPORTING)
         {
@@ -99,10 +101,8 @@ task_solution_pairs.each { task, solution_pairs ->
 
             analysis_results.withOutputStream { out ->
                 def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
-                repGen.generateReport(fileDetectionResult)
+                repGen.generateReport(plaggieFileDetectionResult)
             }
-//            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
-//                    " " + fileDetectionResult.similarityA
         }
     }
 }
@@ -196,7 +196,7 @@ Map<String, StatisticalSummary> calculateTokenStats(List<SolutionsPair> solution
 {
     return solutionsPairs
             .collectEntries(new MultiValueMap()) { solutionsPair ->
-                solutionsPair.tokenFrequencies
+                solutionsPair.detectionResults["plaggie"].tokenFrequencies
             }
             .collectEntries() { token, frequencies ->
                 [token, new DescriptiveStatistics(frequencies as double[])]
