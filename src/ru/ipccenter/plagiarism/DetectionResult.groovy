@@ -19,4 +19,11 @@ class DetectionResult
         return similarity
     }
 
+    @Override
+    public String toString()
+    {
+        return "DetectionResult{" +
+                "similarity=" + similarity +
+                '}';
+    }
 }

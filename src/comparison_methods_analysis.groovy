@@ -1,10 +1,14 @@
-@Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
 @Grab(group='commons-io', module='commons-io', version='2.4')
 import org.apache.commons.io.FileUtils
+@Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
 import ru.ipccenter.plagiarism.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
 import ru.ipccenter.plagiarism.util.ManualChecksSolutionsPairsLoader
+@Grab(group='commons-collections', module='commons-collections', version='3.2.1')
+import  org.apache.commons.collections.map.MultiValueMap
+@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 final TASKS = [
         new Task("array1", "Array3dImpl.java"),
@@ -13,7 +17,7 @@ final TASKS = [
 ]
 
 final DETECTORS = [
-        "plaggie" : new PlaggieDetector(8),
+        "plaggie" : new PlaggieDetector(11),
         "jccd" : new JCCDDetector()
 ]
 
@@ -51,4 +55,28 @@ DETECTORS.each { detectorName, detector ->
                     " " + detectionResult.similarity
         }
     }
+}
+
+task_solution_pairs.each { task, solutionsPairs ->
+    println "task: ${task}"
+    println(
+        solutionsPairs.collectEntries(new MultiValueMap()) { solutionsPair ->
+            solutionsPair.detectionResults.collectEntries { method, detectionResult ->
+                [method, Math.abs(solutionsPair.estimatedSimilarity - detectionResult.similarity)]
+            }
+        }
+        .collect { method, deltas ->
+            deltas = deltas.findAll { it > 0.20 }
+            def statistics = new DescriptiveStatistics(deltas as double[])
+            "${method}: ${statistics.mean}±${statistics.standardDeviation} (${deltas.size()})"
+        }
+    )
+    solutionsPairs.findAll { solutionsPair ->
+        def resultsPlaggie = solutionsPair.detectionResults["plaggie"]
+        def deltaPlaggie = Math.abs(solutionsPair.estimatedSimilarity - resultsPlaggie.similarity)
+        def resultsJCCD = solutionsPair.detectionResults["jccd"]
+        def deltaJCCD = Math.abs(solutionsPair.estimatedSimilarity - resultsJCCD.similarity)
+        deltaPlaggie > 0.20 && deltaJCCD < deltaPlaggie
+    }
+    .each { println it }
 }

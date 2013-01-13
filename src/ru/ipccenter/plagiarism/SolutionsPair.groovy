@@ -11,7 +11,6 @@ public class SolutionsPair
 
     double estimatedSimilarity
     private Map<String, DetectionResult> detectionResults = [:]
-    private Map<String, Double> tokenFrequencies
 
     SolutionsPair(Solution solution1, Solution solution2)
     {
@@ -35,11 +34,14 @@ public class SolutionsPair
         detectionResults[detector] = detectionResult
     }
 
-    Map<String, Double> getTokenFrequencies() {
-        return tokenFrequencies
-    }
-
-    void setTokenFrequencies(Map<String, Double> tokenFrequencies) {
-        this.tokenFrequencies = tokenFrequencies
+    @Override
+    public String toString()
+    {
+        return "SolutionsPair{" +
+                "author1=" + solution1.author +
+                ", author2=" + solution2.author +
+                ", estimatedSimilarity=" + estimatedSimilarity +
+                ", detectionResults=" + detectionResults +
+                '}';
     }
 }
