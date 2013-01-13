@@ -1,10 +1,12 @@
 package ru.ipccenter.plagiarism.detectors
 
 import plag.parser.CodeTokenizer
+import plag.parser.Debug
 import plag.parser.MatchedTile
 import plag.parser.SimpleSubmissionSimilarityChecker
 import plag.parser.SimpleTokenSimilarityChecker
 import plag.parser.SingleFileSubmission
+import plag.parser.Stats
 import plag.parser.SubmissionDetectionResult
 import plag.parser.SubmissionSimilarityChecker
 import plag.parser.java.JavaTokenizer
@@ -19,6 +21,12 @@ import ru.ipccenter.plagiarism.SolutionsPair
  */
 class PlaggieDetector
 {
+    static {
+        Stats.newCounter("files_to_parse");
+        Stats.newCounter("file_comparisons");
+        Debug.setEnabled(false)
+    }
+
     private static final MINIMUM_SIMILARITY_VALUE = 0.0
 
     private final CodeTokenizer tokenizer

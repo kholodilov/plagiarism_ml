@@ -1,7 +1,4 @@
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
-import plag.parser.*
-import plag.parser.java.*
-import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -19,7 +16,6 @@ import ru.ipccenter.plagiarism.util.*
 import ru.ipccenter.plagiarism.detectors.*
 
 final MINIMUM_MATCH_LENGTH = 8
-final MINIMUM_SIMILARITY_VALUE = 0.0
 final TASKS = [
                 new Task("array1", "Array3dImpl.java"),
                 new Task("collections2", "WordCounterImpl.java"),
@@ -40,10 +36,6 @@ final SIMILARITY_INTERVALS =
 final NO_MEAN_VALUE_THRESHOLD = -1.0
 final ZERO_MEAN_VALUE_THRESHOLD = 0.0
 
-Stats.newCounter("files_to_parse");
-Stats.newCounter("file_comparisons");
-Debug.setEnabled(false)
-
 def work_directory = new File(args[0])
 def test_data_directory = new File(work_directory, "test_data")
 def manual_checks_directory = new File(work_directory, "manual_checks")
@@ -55,11 +47,14 @@ if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
-    task_solution_pairs = loadManualChecksPairs(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS)
+    task_solution_pairs =
+        new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS - 1)
+            .loadSolutionsPairs()
 }
 else
 {
-   task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
+   task_solution_pairs = new AllSolutionsPairsLoader(TASKS, test_data_directory)
+                            .loadSolutionsPairs()
 }
 
 def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)
@@ -241,96 +236,4 @@ set style data histograms
 set xtic rotate by -90 scale 0
 plot \
 """ + (1..datasets_count).collect { i -> "\"${filename}.txt\" using ${i*2}:${i*2 + 1}:xtic(1) title col" }.join(", ")
-}
-
-Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> tasks, File test_data_directory) {
-    Map<Task, List<Solution>> task_solutions = [:].withDefault { [] }
-
-    tasks.each { task ->
-        test_data_directory.eachDir { author_dir ->
-            try {
-                task_solutions[task].add(
-                        findSolutionInStandardStructure(test_data_directory, task, new Author(author_dir.name))
-                )
-            } catch (SolutionNotFoundException e)
-            {
-                // skip missing solution
-            }
-        }
-    }
-    return task_solutions
-}
-
-Solution findSolutionInStandardStructure(File test_data_directory, Task task, Author author)
-{
-    def solution_file = new File(test_data_directory,
-            author.name + "/ru/ipccenter/deadline1/" + task.name + "/" + task.filename)
-    if (!solution_file.exists())
-    {
-        throw new SolutionNotFoundException("Solution of task ${task} for author ${author} not found")
-    }
-    return new Solution(task, author, solution_file)
-}
-
-Map<Task, List<SolutionsPair>> makeSolutionPairs(Map<Task, List<Solution>> task_solutions)
-{
-    Map<Task, List<SolutionsPair>> task_solution_pairs = [:].withDefault { [] }
-    task_solutions.each { task, solutions ->
-        for (int i = 0; i < solutions.size(); i++)
-        {
-            for (int j = i + 1; j < solutions.size(); j++)
-            {
-                task_solution_pairs[task] << new SolutionsPair(solutions[i], solutions[j])
-            }
-        }
-    }
-    return task_solution_pairs
-}
-
-Map<Task, List<SolutionsPair>> loadManualChecksPairs(
-        List<Task> tasks, File manual_checks_directory, File test_data_directory, def numberOfIntervals) {
-    Map<Task, List<SolutionsPair>> task_solution_pairs = [:]
-    tasks.each { task ->
-        def manual_checks_file = new File(manual_checks_directory, task.name + ".txt")
-        List<SolutionsPair> solution_pairs = []
-        if (manual_checks_file.exists())
-        {
-            manual_checks_file.eachLine { solutions_pair_line ->
-                try {
-                    solution_pairs.add(
-                            loadSolutionsPair(test_data_directory, task, solutions_pair_line, numberOfIntervals)
-                    )
-                } catch (ManualCheckParseException e)
-                {
-                    println e.message
-                } catch (SolutionNotFoundException e)
-                {
-                    println e.message
-                }
-            }
-            task_solution_pairs[task] = solution_pairs
-        }
-    }
-    return task_solution_pairs;
-}
-
-SolutionsPair loadSolutionsPair(File test_data_directory, Task task, String solutions_pair_line, int numberOfIntervals)
-{
-    def matcher = solutions_pair_line =~ /(\S+) (\S+) (\d+)/
-    if (!matcher.matches())
-    {
-        throw new ManualCheckParseException("Failed to parse manual check line: " + solutions_pair_line);
-    }
-
-    def author1 = new Author(matcher.group(1))
-    def author2 = new Author(matcher.group(2))
-    def estimatedSimilarity = Integer.parseInt(matcher.group(3)) / (numberOfIntervals - 1)
-
-    def solution1 = findSolutionInStandardStructure(test_data_directory, task, author1)
-    def solution2 = findSolutionInStandardStructure(test_data_directory, task, author2)
-
-    def solutions_pair = new SolutionsPair(solution1, solution2)
-    solutions_pair.setEstimatedSimilarity(estimatedSimilarity);
-
-    return solutions_pair;
 }
