@@ -19,7 +19,7 @@ import ru.ipccenter.plagiarism.SolutionsPair
  *
  * @author kholodilov
  */
-class PlaggieDetector
+class PlaggieDetector implements Detector
 {
     static {
         Stats.newCounter("files_to_parse");
@@ -38,6 +38,7 @@ class PlaggieDetector
         checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(minimumMatchLength), tokenizer)
     }
 
+    @Override
     DetectionResult performDetection(SolutionsPair pair)
     {
         def submission1 = new SingleFileSubmission(pair.solution1.file)

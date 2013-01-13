@@ -1,23 +1,24 @@
-import org.apache.commons.io.FileUtils
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
+@Grab(group='commons-io', module='commons-io', version='2.4')
+import org.apache.commons.io.FileUtils
 import ru.ipccenter.plagiarism.Task
+import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
 import ru.ipccenter.plagiarism.util.ManualChecksSolutionsPairsLoader
 
 final TASKS = [
         new Task("array1", "Array3dImpl.java"),
-        new Task("collections2", "WordCounterImpl.java"),
+            new Task("collections2", "WordCounterImpl.java"),
         new Task("reflection0", "ReflectionsImpl.java")
 ]
 
 final DETECTORS = [
-        "plaggie" : new PlaggieDetector(8)
+        "plaggie" : new PlaggieDetector(8),
+        "jccd" : new JCCDDetector()
 ]
 
 final int NUMBER_INTERVALS = 5
 final int MAXIMUM_SIMILARITY_DEGREE = NUMBER_INTERVALS - 1
-
-final PLAGGIE_DETECTOR = "plaggie"
 
 def work_directory = new File(args[0])
 def test_data_directory = new File(work_directory, "test_data")
@@ -46,6 +47,8 @@ DETECTORS.each { detectorName, detector ->
             .withOutputStream { out ->
                 out << detectionResult.report
             }
+            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
+                    " " + detectionResult.similarity
         }
     }
 }
