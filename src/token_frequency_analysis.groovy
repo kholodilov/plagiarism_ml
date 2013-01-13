@@ -27,10 +27,11 @@ final MANUAL_CHECKS = true
 final PLAGGIE_DETECTOR = "plaggie"
 
 final int NUMBER_INTERVALS = 5
+final int MAXIMUM_SIMILARITY_DEGREE = NUMBER_INTERVALS - 1
 final SIMILARITY_INTERVALS =
-    (0..NUMBER_INTERVALS-1)
+    (0..MAXIMUM_SIMILARITY_DEGREE)
             .collect { center ->
-                interval((center - 0.5) / (NUMBER_INTERVALS - 1), (center + 0.5) / (NUMBER_INTERVALS - 1))
+                interval((center - 0.5) / MAXIMUM_SIMILARITY_DEGREE, (center + 0.5) / MAXIMUM_SIMILARITY_DEGREE)
             }
 
 final NO_MEAN_VALUE_THRESHOLD = -1.0
@@ -48,7 +49,7 @@ Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
     task_solution_pairs =
-        new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, NUMBER_INTERVALS - 1)
+        new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
             .loadSolutionsPairs()
 }
 else
