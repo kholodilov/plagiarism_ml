@@ -1,5 +1,5 @@
 @Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
-import plag.parser.*;
+import plag.parser.*
 import plag.parser.java.*
 import plag.parser.report.*
 @Grab(group='org.apache.commons', module='commons-math3', version='3.1')
@@ -16,6 +16,7 @@ import static com.madgag.interval.BeforeOrAfter.BEFORE
 
 import ru.ipccenter.plagiarism.*
 import ru.ipccenter.plagiarism.util.*
+import ru.ipccenter.plagiarism.DetectionResult
 
 final MINIMUM_MATCH_LENGTH = 8
 final MINIMUM_SIMILARITY_VALUE = 0.0
@@ -27,6 +28,7 @@ final TASKS = [
 
 final REPORTING = true
 final MANUAL_CHECKS = true
+final PLAGGIE_DETECTOR = "plaggie"
 
 final int NUMBER_INTERVALS = 5
 final SIMILARITY_INTERVALS =
@@ -76,7 +78,7 @@ task_solution_pairs.each { task, solution_pairs ->
         def token_counts = [:]
         listAllTokens().each { token_counts.put(it, 0) }
 
-        DetectionResult fileDetectionResult = detectionResult.getFileDetectionResults()[0]
+        def fileDetectionResult = detectionResult.getFileDetectionResults()[0]
         for (MatchedTile tile : fileDetectionResult.getMatches())
         {
             def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
@@ -86,7 +88,7 @@ task_solution_pairs.each { task, solution_pairs ->
             }
         }
 
-        pair.setDetectedSimilarity(fileDetectionResult.similarityA)
+        pair.addDetectionResult(PLAGGIE_DETECTOR, new DetectionResult(fileDetectionResult.similarityA))
         def total_tokens = fileDetectionResult.tokensA.size()
         pair.setTokenFrequencies(token_counts.collectEntries { token, count -> [token, count / total_tokens] })
 
@@ -108,7 +110,7 @@ task_solution_pairs.each { task, solution_pairs ->
 def pairs_with_higher_detected_similarity_lists = []
 
 task_solution_pairs.each { task, solution_pairs ->
-    def similarities = solution_pairs.collect { it.detectedSimilarity }
+    def similarities = solution_pairs.collect { it.detectionResults[PLAGGIE_DETECTOR].similarity }
     def overall_stats = new DescriptiveStatistics(similarities as double[])
     println "${task.name}: ${overall_stats.getMean()}±${overall_stats.getStandardDeviation()}"
     println "total pairs compared: ${solution_pairs.size()}"
@@ -126,19 +128,19 @@ task_solution_pairs.each { task, solution_pairs ->
     if (MANUAL_CHECKS)
     {
         def correctly_detected_pairs = solution_pairs.findAll { pair ->
-            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) } ==
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectionResults[PLAGGIE_DETECTOR].similarity)) } ==
             SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
         }
 
         def pairs_with_lower_detected_similarity = solution_pairs.findAll { pair ->
-            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) }
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectionResults[PLAGGIE_DETECTOR].similarity)) }
                 .is(BEFORE,
                     SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
                 )
         }
 
         def pairs_with_higher_detected_similarity = solution_pairs.findAll { pair ->
-            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectedSimilarity)) }
+            SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectionResults[PLAGGIE_DETECTOR].similarity)) }
                 .is(AFTER,
                     SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
                 )
@@ -146,19 +148,22 @@ task_solution_pairs.each { task, solution_pairs ->
 
         println "# Correctly detected pairs (${correctly_detected_pairs.size()}):"
         correctly_detected_pairs.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+            println "${pair.solution1.author} ${pair.solution2.author} \
+                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
         }
 
 
         println "# Pairs with lower detected similarity (${pairs_with_lower_detected_similarity.size()}):"
         pairs_with_lower_detected_similarity.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+            println "${pair.solution1.author} ${pair.solution2.author} \
+                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
         }
 
 
         println "# Pairs with higher detected similarity (${pairs_with_higher_detected_similarity.size()}):"
         pairs_with_higher_detected_similarity.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} ${pair.estimatedSimilarity} ${pair.detectedSimilarity}"
+            println "${pair.solution1.author} ${pair.solution2.author} \
+                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
         }
 
 //        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)

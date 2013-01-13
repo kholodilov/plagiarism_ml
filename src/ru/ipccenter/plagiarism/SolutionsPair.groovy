@@ -10,7 +10,7 @@ public class SolutionsPair
     final Solution solution2
 
     double estimatedSimilarity
-    double detectedSimilarity
+    private Map<String, DetectionResult> detectionResults = [:]
     private Map<String, Double> tokenFrequencies
 
     SolutionsPair(Solution solution1, Solution solution2)
@@ -27,12 +27,12 @@ public class SolutionsPair
         this.estimatedSimilarity = estimatedSimilarity
     }
 
-    double getDetectedSimilarity() {
-        return detectedSimilarity
+    def getDetectionResults() {
+        return detectionResults
     }
 
-    void setDetectedSimilarity(double detectedSimilarity) {
-        this.detectedSimilarity = detectedSimilarity
+    void addDetectionResult(String detector, DetectionResult detectionResult) {
+        detectionResults[detector] = detectionResult
     }
 
     Map<String, Double> getTokenFrequencies() {
