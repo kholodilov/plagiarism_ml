@@ -62,36 +62,15 @@ else
    task_solution_pairs = makeSolutionPairs(findAllSolutions(TASKS, test_data_directory))
 }
 
+def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)
+
 task_solution_pairs.each { task, solution_pairs ->
     println "Processing ${task}"
 
-    def tokenizer = new JavaTokenizer()
-    def checker = new SimpleSubmissionSimilarityChecker(new SimpleTokenSimilarityChecker(MINIMUM_MATCH_LENGTH), tokenizer)
     def task_results_directory = new File(comparison_results_directory, task.name)
     task_results_directory.mkdirs()
     solution_pairs.each{ pair ->
-        def submission1 = new SingleFileSubmission(pair.solution1.file)
-        def submission2 = new SingleFileSubmission(pair.solution2.file)
-
-        def plaggieDetectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
-
-        def token_counts = [:]
-        listAllTokens().each { token_counts.put(it, 0) }
-
-        def plaggieFileDetectionResult = plaggieDetectionResult.getFileDetectionResults()[0]
-        for (MatchedTile tile : plaggieFileDetectionResult.getMatches())
-        {
-            def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
-            for (String token : tokens_in_match)
-            {
-                token_counts.put(token, token_counts[token] + 1)
-            }
-        }
-
-        def total_tokens = plaggieFileDetectionResult.tokensA.size()
-        def tokenFrequencies = token_counts.collectEntries { token, count -> [token, count / total_tokens] }
-
-        def detectionResult = new PlaggieDetectionResult(plaggieFileDetectionResult.similarityA, tokenFrequencies)
+        def detectionResult = detector.performDetection(pair)
         pair.addDetectionResult(PLAGGIE_DETECTOR, detectionResult)
 
         if (REPORTING)
@@ -100,8 +79,7 @@ task_solution_pairs.each { task, solution_pairs ->
                     pair.solution1.author.name + "_" + pair.solution2.author.name + ".txt")
 
             analysis_results.withOutputStream { out ->
-                def repGen = new SimpleTextReportGenerator(new PrintStream(out), true, tokenizer);
-                repGen.generateReport(plaggieFileDetectionResult)
+                out << detectionResult.report
             }
         }
     }
@@ -263,11 +241,6 @@ set style data histograms
 set xtic rotate by -90 scale 0
 plot \
 """ + (1..datasets_count).collect { i -> "\"${filename}.txt\" using ${i*2}:${i*2 + 1}:xtic(1) title col" }.join(", ")
-}
-
-def listAllTokens() {
-    PlagSym.valueStrings
-            .findAll { it != null }
 }
 
 Map<Task, List<Solution>> findAllSolutions(ArrayList<Task> tasks, File test_data_directory) {
