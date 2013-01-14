@@ -81,7 +81,7 @@ task_solution_pairs.each { task, solution_pairs ->
     }
 }
 
-def pairs_with_higher_detected_similarity_lists = []
+def false_positive_pairs_lists = []
 
 task_solution_pairs.each { task, solution_pairs ->
     def similarities = solution_pairs.collect { it.detectionResults[PLAGGIE_DETECTOR].similarity }
@@ -113,7 +113,7 @@ task_solution_pairs.each { task, solution_pairs ->
                 )
         }
 
-        def pairs_with_higher_detected_similarity = solution_pairs.findAll { pair ->
+        def false_positive_pairs = solution_pairs.findAll { pair ->
             SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectionResults[PLAGGIE_DETECTOR].similarity)) }
                 .is(AFTER,
                     SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
@@ -134,32 +134,32 @@ task_solution_pairs.each { task, solution_pairs ->
         }
 
 
-        println "# Pairs with higher detected similarity (${pairs_with_higher_detected_similarity.size()}):"
-        pairs_with_higher_detected_similarity.each { pair ->
+        println "# Pairs with higher detected similarity (${false_positive_pairs.size()}):"
+        false_positive_pairs.each { pair ->
             println "${pair.solution1.author} ${pair.solution2.author} \
                         ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
         }
 
 //        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
 //        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
-//        generateTokenFrequencyHistogram(task, "higher_similarity", pairs_with_higher_detected_similarity, results_directory)
+//        generateTokenFrequencyHistogram(task, "higher_similarity", false_positive_pairs, results_directory)
         generateAggregateTokenFrequencyHistogram(
                 task.name,
-                ["correctly_detected", "higher_similarity"],
-                [correctly_detected_pairs, pairs_with_higher_detected_similarity],
+                ["correctly_detected", "false_positives"],
+                [correctly_detected_pairs, false_positive_pairs],
                 results_directory,
                 ZERO_MEAN_VALUE_THRESHOLD
         )
 
-        pairs_with_higher_detected_similarity_lists.add(pairs_with_higher_detected_similarity)
+        false_positive_pairs_lists.add(false_positive_pairs)
     }
 }
 if (MANUAL_CHECKS)
 {
     generateAggregateTokenFrequencyHistogram(
-            "higher_similarity",
-            task_solution_pairs.collect { task, _ -> "${task.name}_higher_similarity" },
-            pairs_with_higher_detected_similarity_lists,
+            "false_positives",
+            task_solution_pairs.collect { task, _ -> "${task.name}_false_positives" },
+            false_positive_pairs_lists,
             results_directory,
             ZERO_MEAN_VALUE_THRESHOLD
     )

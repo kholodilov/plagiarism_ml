@@ -12,7 +12,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 final TASKS = [
         new Task("array1", "Array3dImpl.java"),
-            new Task("collections2", "WordCounterImpl.java"),
+        new Task("collections2", "WordCounterImpl.java"),
         new Task("reflection0", "ReflectionsImpl.java")
 ]
 
@@ -66,11 +66,12 @@ task_solution_pairs.each { task, solutionsPairs ->
             }
         }
         .collect { method, deltas ->
-            deltas = deltas.findAll { it > 0.20 }
+            //deltas = deltas.findAll { it > 0.20 }
             def statistics = new DescriptiveStatistics(deltas as double[])
             "${method}: ${statistics.mean}±${statistics.standardDeviation} (${deltas.size()})"
         }
     )
+/*
     solutionsPairs.findAll { solutionsPair ->
         def resultsPlaggie = solutionsPair.detectionResults["plaggie"]
         def deltaPlaggie = Math.abs(solutionsPair.estimatedSimilarity - resultsPlaggie.similarity)
@@ -79,4 +80,5 @@ task_solution_pairs.each { task, solutionsPairs ->
         deltaPlaggie > 0.20 && deltaJCCD < deltaPlaggie
     }
     .each { println it }
+*/
 }
