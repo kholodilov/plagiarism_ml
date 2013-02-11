@@ -120,25 +120,9 @@ task_solution_pairs.each { task, solution_pairs ->
                 )
         }
 
-        println "# Correctly detected pairs (${correctly_detected_pairs.size()}):"
-        correctly_detected_pairs.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} \
-                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
-        }
-
-
-        println "# Pairs with lower detected similarity (${pairs_with_lower_detected_similarity.size()}):"
-        pairs_with_lower_detected_similarity.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} \
-                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
-        }
-
-
-        println "# Pairs with higher detected similarity (${false_positive_pairs.size()}):"
-        false_positive_pairs.each { pair ->
-            println "${pair.solution1.author} ${pair.solution2.author} \
-                        ${pair.estimatedSimilarity} ${pair.detectionResults[PLAGGIE_DETECTOR].similarity}"
-        }
+        printPairsInfo(correctly_detected_pairs, "Correctly detected pairs", PLAGGIE_DETECTOR)
+        printPairsInfo(pairs_with_lower_detected_similarity, "Pairs with lower detected similarity", PLAGGIE_DETECTOR)
+        printPairsInfo(false_positive_pairs, "Pairs with higher detected similarity", PLAGGIE_DETECTOR)
 
 //        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
 //        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
@@ -154,6 +138,16 @@ task_solution_pairs.each { task, solution_pairs ->
         false_positive_pairs_lists.add(false_positive_pairs)
     }
 }
+
+private void printPairsInfo(ArrayList<SolutionsPair> solutionsPairs, String infoString, String detector)
+{
+    println "# ${infoString} (${solutionsPairs.size()}):"
+    solutionsPairs.each { pair ->
+        println "${pair.solution1.author} ${pair.solution2.author} \
+                ${pair.estimatedSimilarity} ${pair.detectionResults[detector].similarity}"
+    }
+}
+
 if (MANUAL_CHECKS)
 {
     generateAggregateTokenFrequencyHistogram(
