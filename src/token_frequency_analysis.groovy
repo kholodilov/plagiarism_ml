@@ -86,8 +86,8 @@ def false_positive_pairs_lists = []
 task_solution_pairs.each { task, solution_pairs ->
     def similarities = solution_pairs.collect { it.detectionResults[PLAGGIE_DETECTOR].similarity }
     def overall_stats = new DescriptiveStatistics(similarities as double[])
-    println "${task.name}: ${overall_stats.getMean()}±${overall_stats.getStandardDeviation()}"
-    println "total pairs compared: ${solution_pairs.size()}"
+    //println "${task.name}: ${overall_stats.getMean()}±${overall_stats.getStandardDeviation()}"
+    //println "total pairs compared: ${solution_pairs.size()}"
     def intervals_breakdown = [:]
     SIMILARITY_INTERVALS.each { intervals_breakdown[it] = 0 }
     similarities.each { similarity ->
@@ -106,7 +106,7 @@ task_solution_pairs.each { task, solution_pairs ->
             SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
         }
 
-        def pairs_with_lower_detected_similarity = solution_pairs.findAll { pair ->
+        def false_negative_pairs = solution_pairs.findAll { pair ->
             SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.detectionResults[PLAGGIE_DETECTOR].similarity)) }
                 .is(BEFORE,
                     SIMILARITY_INTERVALS.find { it.contains(new BigDecimal(pair.estimatedSimilarity)) }
@@ -120,13 +120,13 @@ task_solution_pairs.each { task, solution_pairs ->
                 )
         }
 
-        printPairsInfo(correctly_detected_pairs, "Correctly detected pairs", PLAGGIE_DETECTOR)
-        printPairsInfo(pairs_with_lower_detected_similarity, "Pairs with lower detected similarity", PLAGGIE_DETECTOR)
-        printPairsInfo(false_positive_pairs, "Pairs with higher detected similarity", PLAGGIE_DETECTOR)
+        //printPairsInfo(correctly_detected_pairs, "Correctly detected pairs", PLAGGIE_DETECTOR)
+        //printPairsInfo(false_negative_pairs, "False negative pairs", PLAGGIE_DETECTOR)
+        //printPairsInfo(false_positive_pairs, "False positive pairs", PLAGGIE_DETECTOR)
 
 //        generateTokenFrequencyHistogram(task, "correctly_detected", correctly_detected_pairs, results_directory)
-//        generateTokenFrequencyHistogram(task, "lower_similarity", pairs_with_lower_detected_similarity, results_directory)
-//        generateTokenFrequencyHistogram(task, "higher_similarity", false_positive_pairs, results_directory)
+//        generateTokenFrequencyHistogram(task, "false_negatives", false_negative_pairs, results_directory)
+//        generateTokenFrequencyHistogram(task, "false_positives", false_positive_pairs, results_directory)
         generateAggregateTokenFrequencyHistogram(
                 task.name,
                 ["correctly_detected", "false_positives"],
@@ -139,15 +139,6 @@ task_solution_pairs.each { task, solution_pairs ->
     }
 }
 
-private void printPairsInfo(ArrayList<SolutionsPair> solutionsPairs, String infoString, String detector)
-{
-    println "# ${infoString} (${solutionsPairs.size()}):"
-    solutionsPairs.each { pair ->
-        println "${pair.solution1.author} ${pair.solution2.author} \
-                ${pair.estimatedSimilarity} ${pair.detectionResults[detector].similarity}"
-    }
-}
-
 if (MANUAL_CHECKS)
 {
     generateAggregateTokenFrequencyHistogram(
@@ -157,6 +148,15 @@ if (MANUAL_CHECKS)
             results_directory,
             ZERO_MEAN_VALUE_THRESHOLD
     )
+}
+
+private void printPairsInfo(ArrayList<SolutionsPair> solutionsPairs, String infoString, String detector)
+{
+    println "# ${infoString} (${solutionsPairs.size()}):"
+    solutionsPairs.each { pair ->
+        println "${pair.solution1.author} ${pair.solution2.author} \
+                ${pair.estimatedSimilarity} ${pair.detectionResults[detector].similarity}"
+    }
 }
 // methods
 
