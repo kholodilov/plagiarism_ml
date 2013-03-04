@@ -40,16 +40,19 @@ class ManualChecksSolutionsPairsLoader implements SolutionsPairsLoader
             if (manual_checks_file.exists())
             {
                 manual_checks_file.eachLine { solutionsPairLine ->
-                    try {
-                        solutionsPairs.add(
-                                loadSolutionsPair(testDataDirectory, task, solutionsPairLine)
-                        )
-                    } catch (ManualCheckParseException e)
+                    if (! solutionsPairLine.startsWith("#"))
                     {
-                        println e.message
-                    } catch (SolutionNotFoundException e)
-                    {
-                        println e.message
+                        try {
+                            solutionsPairs.add(
+                                    loadSolutionsPair(testDataDirectory, task, solutionsPairLine)
+                            )
+                        } catch (ManualCheckParseException e)
+                        {
+                            println e.message
+                        } catch (SolutionNotFoundException e)
+                        {
+                            println e.message
+                        }
                     }
                 }
                 taskSolutionPairs[task] = solutionsPairs

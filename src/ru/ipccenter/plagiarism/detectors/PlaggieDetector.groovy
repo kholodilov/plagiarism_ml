@@ -50,6 +50,7 @@ class PlaggieDetector implements Detector
         listAllTokens().each { token_counts.put(it, 0) }
 
         def fileDetectionResult = submissionDetectionResult.getFileDetectionResults()[0]
+        def tokens_in_matches = 0
         for (MatchedTile tile : fileDetectionResult.getMatches())
         {
             def tokens_in_match = tile.getTileA().getTokenList().getValueArray()[tile.getTileA().getStartTokenIndex()..tile.getTileA().getEndTokenIndex()].collect {tokenizer.getValueString(it)}
@@ -57,6 +58,7 @@ class PlaggieDetector implements Detector
             {
                 token_counts.put(token, token_counts[token] + 1)
             }
+            tokens_in_matches += tokens_in_match.size()
         }
 
         def total_tokens = fileDetectionResult.tokensA.size()
