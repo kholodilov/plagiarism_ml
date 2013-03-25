@@ -1,8 +1,5 @@
-@Grab(group='commons-io', module='commons-io', version='2.4')
 import org.apache.commons.io.FileUtils
-@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-@Grab(group='org.encog', module='encog-core', version='3.1.0')
 import org.encog.engine.network.activation.ActivationSigmoid
 import org.encog.ml.data.MLData
 import org.encog.ml.data.MLDataPair
@@ -12,7 +9,6 @@ import org.encog.ml.train.MLTrain
 import org.encog.neural.networks.BasicNetwork
 import org.encog.neural.networks.layers.BasicLayer
 import org.encog.neural.networks.training.propagation.back.Backpropagation
-@Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
 import ru.ipccenter.plagiarism.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector

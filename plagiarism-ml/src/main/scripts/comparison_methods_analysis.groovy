@@ -1,13 +1,9 @@
-@Grab(group='commons-io', module='commons-io', version='2.4')
 import org.apache.commons.io.FileUtils
-@Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
 import ru.ipccenter.plagiarism.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
 import ru.ipccenter.plagiarism.util.ManualChecksSolutionsPairsLoader
-@Grab(group='commons-collections', module='commons-collections', version='3.2.1')
 import  org.apache.commons.collections.map.MultiValueMap
-@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 final TASKS = [

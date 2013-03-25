@@ -1,12 +1,7 @@
-@Grab(group='ru.ipccenter.plaggie', module='plaggie', version='1.0.1-SNAPSHOT')
-@Grab(group='org.apache.commons', module='commons-math3', version='3.1')
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-@Grab(group='commons-io', module='commons-io', version='2.4')
 import org.apache.commons.io.FileUtils
-@Grab(group='commons-collections', module='commons-collections', version='3.2.1')
 import  org.apache.commons.collections.map.MultiValueMap
-@Grab(group='com.madgag', module='util-intervals', version='1.33')
 import static com.madgag.interval.SimpleInterval.interval
 import static com.madgag.interval.BeforeOrAfter.AFTER
 import static com.madgag.interval.BeforeOrAfter.BEFORE
