@@ -1,7 +1,6 @@
 package ru.ipccenter.plagiarism.detectors
 
 import org.eposoft.jccd.data.ast.ANode
-import org.eposoft.jccd.data.ast.ASTManager
 import org.eposoft.jccd.data.ast.NodeTypes
 import org.eposoft.jccd.detectors.*
 import org.eposoft.jccd.data.*
@@ -10,8 +9,8 @@ import org.eposoft.jccd.preprocessors.java.*
 import org.eposoft.jccd.comparators.ast.*
 import org.eposoft.jccd.comparators.ast.java.*
 
-import ru.ipccenter.plagiarism.DetectionResult
-import ru.ipccenter.plagiarism.SolutionsPair
+import ru.ipccenter.plagiarism.model.DetectionResult
+import ru.ipccenter.plagiarism.model.SolutionsPair
 
 /**
  *

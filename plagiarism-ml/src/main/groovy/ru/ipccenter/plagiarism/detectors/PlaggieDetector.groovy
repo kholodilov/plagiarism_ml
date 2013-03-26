@@ -12,8 +12,8 @@ import plag.parser.SubmissionSimilarityChecker
 import plag.parser.java.JavaTokenizer
 import plag.parser.java.PlagSym
 import plag.parser.report.SimpleTextReportGenerator
-import ru.ipccenter.plagiarism.DetectionResult
-import ru.ipccenter.plagiarism.SolutionsPair
+import ru.ipccenter.plagiarism.model.DetectionResult
+import ru.ipccenter.plagiarism.model.SolutionsPair
 
 /**
  *

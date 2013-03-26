@@ -1,8 +1,10 @@
 package ru.ipccenter.plagiarism.web
 
-import ru.ipccenter.plagiarism.Solution
-import ru.ipccenter.plagiarism.Task
-import ru.ipccenter.plagiarism.util.AllSolutionsPairsLoader
+import ru.ipccenter.plagiarism.impl.TaskRepositoryFileImpl
+import ru.ipccenter.plagiarism.model.Solution
+import ru.ipccenter.plagiarism.model.Task
+import ru.ipccenter.plagiarism.impl.AllSolutionsPairRepository
+import ru.ipccenter.plagiarism.model.TaskRepository
 
 /**
  *
@@ -15,14 +17,13 @@ class ComparisonHelper
     private rightSource
     private info
 
-    private static final TASKS = [
-            new Task("array1", "Array3dImpl.java"),
-            new Task("collections2", "WordCounterImpl.java"),
-            new Task("reflection0", "ReflectionsImpl.java")
-    ]
-    private static final TEST_DATA_DIRECTORY = new File(System.getProperty("workDirectory") + "/test_data")
+    private tasks
 
-    private final AllSolutionsPairsLoader loader
+    private dataDirectoryPath = System.getProperty("workDirectory")
+    private test_data_directory = new File(dataDirectoryPath + "/test_data")
+
+    private final TaskRepository taskRepository
+    private final AllSolutionsPairRepository loader
 
     private final Map<Task, List<Solution>> task_solutions
 
@@ -30,7 +31,10 @@ class ComparisonHelper
 
     ComparisonHelper()
     {
-        loader = new AllSolutionsPairsLoader(TASKS, TEST_DATA_DIRECTORY)
+        taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
+        tasks = taskRepository.findAll()
+
+        loader = new AllSolutionsPairRepository(tasks, test_data_directory)
         task_solutions = loader.loadAllSolutions()
     }
 

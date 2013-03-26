@@ -9,10 +9,10 @@ import org.encog.ml.train.MLTrain
 import org.encog.neural.networks.BasicNetwork
 import org.encog.neural.networks.layers.BasicLayer
 import org.encog.neural.networks.training.propagation.back.Backpropagation
-import ru.ipccenter.plagiarism.Task
+import ru.ipccenter.plagiarism.model.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
-import ru.ipccenter.plagiarism.util.ManualChecksSolutionsPairsLoader
+import ru.ipccenter.plagiarism.impl.ManualChecksSolutionsPairRepository
 
 final TASKS = [
         new Task("array1", "Array3dImpl.java"),
@@ -37,7 +37,7 @@ def comparison_results_directory = new File(results_directory, "comparison")
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
 def task_solution_pairs =
-    new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
+    new ManualChecksSolutionsPairRepository(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
             .loadSolutionsPairs()
 
 task_solution_pairs.each { task, solution_pairs ->

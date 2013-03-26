@@ -1,8 +1,8 @@
-package ru.ipccenter.plagiarism.util
+package ru.ipccenter.plagiarism.impl
 
-import ru.ipccenter.plagiarism.Author
-import ru.ipccenter.plagiarism.Solution
-import ru.ipccenter.plagiarism.Task
+import ru.ipccenter.plagiarism.model.Author
+import ru.ipccenter.plagiarism.model.Solution
+import ru.ipccenter.plagiarism.model.Task
 
 /**
  *

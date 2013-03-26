@@ -1,16 +1,17 @@
-package ru.ipccenter.plagiarism.util
+package ru.ipccenter.plagiarism.impl
 
-import ru.ipccenter.plagiarism.Author
-import ru.ipccenter.plagiarism.SolutionsPair
-import ru.ipccenter.plagiarism.Task
+import ru.ipccenter.plagiarism.model.Author
+import ru.ipccenter.plagiarism.model.SolutionsPair
+import ru.ipccenter.plagiarism.model.SolutionsPairRepository
+import ru.ipccenter.plagiarism.model.Task
 
-import static ru.ipccenter.plagiarism.util.StandardStructureHelper.findSolutionInStandardStructure
+import static ru.ipccenter.plagiarism.impl.StandardStructureHelper.findSolutionInStandardStructure
 
 /**
  *
  * @author kholodilov
  */
-class ManualChecksSolutionsPairsLoader implements SolutionsPairsLoader
+class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 {
 
     private final List<Task> tasks
@@ -18,7 +19,7 @@ class ManualChecksSolutionsPairsLoader implements SolutionsPairsLoader
     private final File testDataDirectory
     private final Object maximumSimilarityDegree
 
-    ManualChecksSolutionsPairsLoader(
+    ManualChecksSolutionsPairRepository(
             List<Task> tasks,
             File manualChecksDirectory,
             File testDataDirectory,
@@ -35,30 +36,33 @@ class ManualChecksSolutionsPairsLoader implements SolutionsPairsLoader
     {
         Map<Task, List<SolutionsPair>> taskSolutionPairs = [:]
         tasks.each { task ->
-            def manual_checks_file = new File(manualChecksDirectory, task.name + ".txt")
-            List<SolutionsPair> solutionsPairs = []
-            if (manual_checks_file.exists())
-            {
-                manual_checks_file.eachLine { solutionsPairLine ->
-                    if (! solutionsPairLine.startsWith("#"))
-                    {
-                        try {
-                            solutionsPairs.add(
-                                    loadSolutionsPair(testDataDirectory, task, solutionsPairLine)
-                            )
-                        } catch (ManualCheckParseException e)
-                        {
-                            println e.message
-                        } catch (SolutionNotFoundException e)
-                        {
-                            println e.message
-                        }
-                    }
-                }
-                taskSolutionPairs[task] = solutionsPairs
-            }
+            taskSolutionPairs[task] = findFor(task)
         }
         return taskSolutionPairs;
+    }
+
+    @Override
+    List<SolutionsPair> findFor(Task task)
+    {
+        List<SolutionsPair> solutionsPairs = []
+
+        def manual_checks_file = new File(manualChecksDirectory, task.name + ".txt")
+        if (manual_checks_file.exists()) {
+            manual_checks_file.eachLine { solutionsPairLine ->
+                if (!solutionsPairLine.startsWith("#")) {
+                    try {
+                        solutionsPairs.add(
+                                loadSolutionsPair(testDataDirectory, task, solutionsPairLine)
+                        )
+                    } catch (ManualCheckParseException e) {
+                        println e.message
+                    } catch (SolutionNotFoundException e) {
+                        println e.message
+                    }
+                }
+            }
+        }
+        return solutionsPairs
     }
 
     private SolutionsPair loadSolutionsPair(File test_data_directory, Task task, String solutionsPairLine)

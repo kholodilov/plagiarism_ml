@@ -1,7 +1,7 @@
 package ru.ipccenter.plagiarism.detectors
 
-import ru.ipccenter.plagiarism.DetectionResult
-import ru.ipccenter.plagiarism.SolutionsPair
+import ru.ipccenter.plagiarism.model.DetectionResult
+import ru.ipccenter.plagiarism.model.SolutionsPair
 
 /**
  *

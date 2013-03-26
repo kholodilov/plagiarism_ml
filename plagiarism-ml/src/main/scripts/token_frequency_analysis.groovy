@@ -2,20 +2,18 @@ import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.io.FileUtils
 import  org.apache.commons.collections.map.MultiValueMap
+import ru.ipccenter.plagiarism.model.SolutionsPair
+import ru.ipccenter.plagiarism.model.Task
+
 import static com.madgag.interval.SimpleInterval.interval
 import static com.madgag.interval.BeforeOrAfter.AFTER
 import static com.madgag.interval.BeforeOrAfter.BEFORE
 
 import ru.ipccenter.plagiarism.*
-import ru.ipccenter.plagiarism.util.*
+import ru.ipccenter.plagiarism.impl.*
 import ru.ipccenter.plagiarism.detectors.*
 
 final MINIMUM_MATCH_LENGTH = 8
-final TASKS = [
-                new Task("array1", "Array3dImpl.java"),
-                new Task("collections2", "WordCounterImpl.java"),
-                new Task("reflection0", "ReflectionsImpl.java")
-              ]
 
 final REPORTING = true
 final MANUAL_CHECKS = true
@@ -32,11 +30,15 @@ final SIMILARITY_INTERVALS =
 final NO_MEAN_VALUE_THRESHOLD = -1.0
 final ZERO_MEAN_VALUE_THRESHOLD = 0.0
 
-def work_directory = new File(args[0])
+def dataDirectoryPath = args[0]
+def work_directory = new File(dataDirectoryPath)
 def test_data_directory = new File(work_directory, "test_data")
 def manual_checks_directory = new File(work_directory, "manual_checks")
 def results_directory = new File(work_directory, "results")
 def comparison_results_directory = new File(results_directory, "comparison")
+
+def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
+def tasks = taskRepository.findAll()
 
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
@@ -44,12 +46,12 @@ Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
     task_solution_pairs =
-        new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
+        new ManualChecksSolutionsPairRepository(tasks, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
             .loadSolutionsPairs()
 }
 else
 {
-   task_solution_pairs = new AllSolutionsPairsLoader(TASKS, test_data_directory)
+   task_solution_pairs = new AllSolutionsPairRepository(tasks, test_data_directory)
                             .loadSolutionsPairs()
 }
 

@@ -1,4 +1,4 @@
-package ru.ipccenter.plagiarism.util;
+package ru.ipccenter.plagiarism.impl;
 
 /**
  * @author kholodilov

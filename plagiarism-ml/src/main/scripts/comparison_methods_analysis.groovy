@@ -1,8 +1,9 @@
 import org.apache.commons.io.FileUtils
-import ru.ipccenter.plagiarism.Task
+import ru.ipccenter.plagiarism.model.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
-import ru.ipccenter.plagiarism.util.ManualChecksSolutionsPairsLoader
+import ru.ipccenter.plagiarism.impl.ManualChecksSolutionsPairRepository
+import ru.ipccenter.plagiarism.impl.ManualChecksSolutionsPairRepository
 import  org.apache.commons.collections.map.MultiValueMap
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
@@ -29,7 +30,7 @@ def comparison_results_directory = new File(results_directory, "comparison")
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
 def task_solution_pairs =
-    new ManualChecksSolutionsPairsLoader(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
+    new ManualChecksSolutionsPairRepository(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
             .loadSolutionsPairs()
 
 DETECTORS.each { detectorName, detector ->
