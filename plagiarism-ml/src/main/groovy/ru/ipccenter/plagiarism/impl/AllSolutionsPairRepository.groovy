@@ -1,12 +1,6 @@
 package ru.ipccenter.plagiarism.impl
 
-import ru.ipccenter.plagiarism.model.Author
-import ru.ipccenter.plagiarism.model.Solution
-import ru.ipccenter.plagiarism.model.SolutionsPair
-import ru.ipccenter.plagiarism.model.SolutionsPairRepository
-import ru.ipccenter.plagiarism.model.Task
-
-import static ru.ipccenter.plagiarism.impl.StandardStructureHelper.findSolutionInStandardStructure
+import ru.ipccenter.plagiarism.model.*
 
 /**
  *
@@ -14,11 +8,13 @@ import static ru.ipccenter.plagiarism.impl.StandardStructureHelper.findSolutionI
  */
 class AllSolutionsPairRepository implements SolutionsPairRepository
 {
+    private final SolutionRepository solutionRepository
     private final ArrayList<Task> tasks
     private final File testDataDirectory
 
-    AllSolutionsPairRepository(List<Task> tasks, File testDataDirectory)
+    AllSolutionsPairRepository(SolutionRepository solutionRepository, List<Task> tasks, File testDataDirectory)
     {
+        this.solutionRepository = solutionRepository
         this.tasks = tasks
         this.testDataDirectory = testDataDirectory
     }
@@ -47,17 +43,7 @@ class AllSolutionsPairRepository implements SolutionsPairRepository
 
     private List<Solution> loadAllSolutionsFor(Task task)
     {
-        def solutions = []
-        testDataDirectory.eachDir { authorDir ->
-            try
-            {
-                solutions << findSolutionInStandardStructure(testDataDirectory, task, new Author(authorDir.name))
-            }
-            catch (SolutionNotFoundException e) {
-                // skip missing solution
-            }
-        }
-        return solutions
+        return solutionRepository.findAllSolutionsFor(task)
     }
 
     private Map<Task, List<SolutionsPair>> makeSolutionsPairs(Map<Task, List<Solution>> taskSolutions)

@@ -1,9 +1,7 @@
 package ru.ipccenter.plagiarism.web
 
-import ru.ipccenter.plagiarism.impl.TaskRepositoryFileImpl
 import ru.ipccenter.plagiarism.model.Solution
-import ru.ipccenter.plagiarism.model.Task
-import ru.ipccenter.plagiarism.impl.AllSolutionsPairRepository
+import ru.ipccenter.plagiarism.model.SolutionRepository
 import ru.ipccenter.plagiarism.model.TaskRepository
 
 /**
@@ -17,25 +15,15 @@ class ComparisonHelper
     private rightSource
     private info
 
-    private tasks
-
-    private dataDirectoryPath = System.getProperty("workDirectory")
-    private test_data_directory = new File(dataDirectoryPath + "/test_data")
-
     private final TaskRepository taskRepository
-    private final AllSolutionsPairRepository loader
-
-    private final Map<Task, List<Solution>> task_solutions
+    private final SolutionRepository solutionRepository
 
     private final random = new Random()
 
-    ComparisonHelper()
+    ComparisonHelper(TaskRepository taskRepository, SolutionRepository solutionRepository)
     {
-        taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
-        tasks = taskRepository.findAll()
-
-        loader = new AllSolutionsPairRepository(tasks, test_data_directory)
-        task_solutions = loader.loadAllSolutions()
+        this.taskRepository = taskRepository
+        this.solutionRepository = solutionRepository
     }
 
     def getLeftSource()
@@ -55,12 +43,8 @@ class ComparisonHelper
 
     public void reload(String task_name, String author1, String author2)
     {
-        def solutions = task_solutions.find { task, _ -> task.name == task_name }?.value
-        if (solutions == null)
-        {
-            renderUnknownTask(task_name)
-            return
-        }
+        def task = taskRepository.find(task_name)
+        def solutions = solutionRepository.findAllSolutionsFor(task)
 
         def solution1 = getSolutionForAuthorOrRandomSolution(solutions, author1)
         if (solution1 == null)
@@ -91,13 +75,6 @@ class ComparisonHelper
     private getRandomSolution(List<Solution> solutions)
     {
         return solutions[random.nextInt(solutions.size())]
-    }
-
-    private renderUnknownTask(String task)
-    {
-        info = "Unknown task: " + task
-        leftSource = ""
-        rightSource = ""
     }
 
     private renderMissingSolution(String task, String author) {

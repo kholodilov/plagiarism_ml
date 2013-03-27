@@ -6,6 +6,8 @@ package ru.ipccenter.plagiarism.model
  */
 class Task
 {
+    static final Task NULL_TASK
+
     final String name
     final String filename
 

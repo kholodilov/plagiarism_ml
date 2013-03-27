@@ -40,19 +40,19 @@ def comparison_results_directory = new File(results_directory, "comparison")
 def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def tasks = taskRepository.findAll()
 
+def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
+
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
 Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
     task_solution_pairs =
-        new ManualChecksSolutionsPairRepository(tasks, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
-            .loadSolutionsPairs()
+        new ManualChecksSolutionsPairRepository(solutionRepository, tasks, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE).loadSolutionsPairs()
 }
 else
 {
-   task_solution_pairs = new AllSolutionsPairRepository(tasks, test_data_directory)
-                            .loadSolutionsPairs()
+    task_solution_pairs = new AllSolutionsPairRepository(solutionRepository, tasks, test_data_directory).loadSolutionsPairs()
 }
 
 def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)

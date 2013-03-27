@@ -1,11 +1,6 @@
 package ru.ipccenter.plagiarism.impl
 
-import ru.ipccenter.plagiarism.model.Author
-import ru.ipccenter.plagiarism.model.SolutionsPair
-import ru.ipccenter.plagiarism.model.SolutionsPairRepository
-import ru.ipccenter.plagiarism.model.Task
-
-import static ru.ipccenter.plagiarism.impl.StandardStructureHelper.findSolutionInStandardStructure
+import ru.ipccenter.plagiarism.model.*
 
 /**
  *
@@ -16,17 +11,20 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 
     private final List<Task> tasks
     private final File manualChecksDirectory
-    private final File testDataDirectory
+    private final String dataDirectoryPath
     private final Object maximumSimilarityDegree
+    private final SolutionRepository solutionRepository
 
     ManualChecksSolutionsPairRepository(
+            SolutionRepository solutionRepository,
             List<Task> tasks,
             File manualChecksDirectory,
-            File testDataDirectory,
+            String dataDirectoryPath,
             def maximumSimilarityDegree)
     {
+        this.solutionRepository = solutionRepository
         this.maximumSimilarityDegree = maximumSimilarityDegree
-        this.testDataDirectory = testDataDirectory
+        this.dataDirectoryPath = dataDirectoryPath
         this.manualChecksDirectory = manualChecksDirectory
         this.tasks = tasks
     }
@@ -52,7 +50,7 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
                 if (!solutionsPairLine.startsWith("#")) {
                     try {
                         solutionsPairs.add(
-                                loadSolutionsPair(testDataDirectory, task, solutionsPairLine)
+                                loadSolutionsPair(dataDirectoryPath, task, solutionsPairLine)
                         )
                     } catch (ManualCheckParseException e) {
                         println e.message
@@ -65,7 +63,7 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
         return solutionsPairs
     }
 
-    private SolutionsPair loadSolutionsPair(File test_data_directory, Task task, String solutionsPairLine)
+    private SolutionsPair loadSolutionsPair(String dataDirectoryPath, Task task, String solutionsPairLine)
     {
         def matcher = solutionsPairLine =~ /(\S+) (\S+) (\d+)/
         if (!matcher.matches())
@@ -77,8 +75,8 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
         def author2 = new Author(matcher.group(2))
         double estimatedSimilarity = Integer.parseInt(matcher.group(3)) / maximumSimilarityDegree
 
-        def solution1 = findSolutionInStandardStructure(test_data_directory, task, author1)
-        def solution2 = findSolutionInStandardStructure(test_data_directory, task, author2)
+        def solution1 = solutionRepository.findSolutionFor(task, author1)
+        def solution2 = solutionRepository.findSolutionFor(task, author2)
 
         def solutions_pair = new SolutionsPair(solution1, solution2)
         solutions_pair.setEstimatedSimilarity(estimatedSimilarity);

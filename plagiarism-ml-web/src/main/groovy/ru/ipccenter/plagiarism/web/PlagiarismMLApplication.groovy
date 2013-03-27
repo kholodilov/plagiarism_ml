@@ -1,5 +1,8 @@
 package ru.ipccenter.plagiarism.web
 
+import ru.ipccenter.plagiarism.impl.SolutionRepositoryFSImpl
+import ru.ipccenter.plagiarism.impl.TaskRepositoryFileImpl
+
 import javax.ws.rs.core.Application
 
 /**
@@ -9,12 +12,20 @@ import javax.ws.rs.core.Application
 class PlagiarismMLApplication extends Application
 {
 
+    private static final String DATA_DIRECTORY_PATH = System.getProperty("dataDirectory")
+
     @Override
     Set<Object> getSingletons()
     {
         Set<Object> singletons = new HashSet<Object>()
+
         singletons.add(new FreemarkerViewProcessor())
-        singletons.add(new ManualChecker())
+        singletons.add(new ManualChecker(
+                        new ComparisonHelper(
+                            new TaskRepositoryFileImpl(DATA_DIRECTORY_PATH),
+                            new SolutionRepositoryFSImpl(DATA_DIRECTORY_PATH))
+                        ))
+
         return singletons
     }
 }

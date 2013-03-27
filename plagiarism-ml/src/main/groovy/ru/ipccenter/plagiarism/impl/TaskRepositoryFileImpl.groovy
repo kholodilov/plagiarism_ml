@@ -1,6 +1,7 @@
 package ru.ipccenter.plagiarism.impl
 
 import ru.ipccenter.plagiarism.model.Task
+import ru.ipccenter.plagiarism.model.TaskNotFoundException
 import ru.ipccenter.plagiarism.model.TaskRepository
 
 /**
@@ -13,8 +14,18 @@ class TaskRepositoryFileImpl implements TaskRepository
 
     TaskRepositoryFileImpl(String dataDirectoryPath)
     {
-
         this.dataDirectoryPath = dataDirectoryPath
+    }
+
+    @Override
+    Task find(String name)
+    {
+        def task = findAll().find { it.name == name }
+        if (task == null)
+        {
+            throw new TaskNotFoundException("Task $name not found")
+        }
+        return task
     }
 
     @Override

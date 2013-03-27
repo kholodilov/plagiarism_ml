@@ -9,6 +9,7 @@ import org.encog.ml.train.MLTrain
 import org.encog.neural.networks.BasicNetwork
 import org.encog.neural.networks.layers.BasicLayer
 import org.encog.neural.networks.training.propagation.back.Backpropagation
+import ru.ipccenter.plagiarism.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.model.Task
 import ru.ipccenter.plagiarism.detectors.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.PlaggieDetector
@@ -28,16 +29,19 @@ final DETECTORS = [
 final int NUMBER_INTERVALS = 5
 final int MAXIMUM_SIMILARITY_DEGREE = NUMBER_INTERVALS - 1
 
-def work_directory = new File(args[0])
+def dataDirectoryPath = args[0]
+def work_directory = new File(dataDirectoryPath)
 def test_data_directory = new File(work_directory, "test_data")
 def manual_checks_directory = new File(work_directory, "manual_checks")
 def results_directory = new File(work_directory, "results")
 def comparison_results_directory = new File(results_directory, "comparison")
 
+def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
+
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
 def task_solution_pairs =
-    new ManualChecksSolutionsPairRepository(TASKS, manual_checks_directory, test_data_directory, MAXIMUM_SIMILARITY_DEGREE)
+    new ManualChecksSolutionsPairRepository(solutionRepository, TASKS, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
             .loadSolutionsPairs()
 
 task_solution_pairs.each { task, solution_pairs ->
