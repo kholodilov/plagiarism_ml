@@ -1,4 +1,6 @@
-package ru.ipccenter.plagiarism.model;
+package ru.ipccenter.plagiarism.solutions
+
+import ru.ipccenter.plagiarism.detectors.DetectionResult;
 
 /**
  * @author dmitry

@@ -1,4 +1,4 @@
-package ru.ipccenter.plagiarism.detectors
+package ru.ipccenter.plagiarism.detectors.impl
 
 import plag.parser.CodeTokenizer
 import plag.parser.Debug
@@ -12,8 +12,9 @@ import plag.parser.SubmissionSimilarityChecker
 import plag.parser.java.JavaTokenizer
 import plag.parser.java.PlagSym
 import plag.parser.report.SimpleTextReportGenerator
-import ru.ipccenter.plagiarism.model.DetectionResult
-import ru.ipccenter.plagiarism.model.SolutionsPair
+import ru.ipccenter.plagiarism.detectors.DetectionResult
+import ru.ipccenter.plagiarism.detectors.Detector
+import ru.ipccenter.plagiarism.solutions.SolutionsPair
 
 /**
  *

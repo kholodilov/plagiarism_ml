@@ -2,16 +2,15 @@ import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.io.FileUtils
 import  org.apache.commons.collections.map.MultiValueMap
-import ru.ipccenter.plagiarism.model.SolutionsPair
-import ru.ipccenter.plagiarism.model.Task
+import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
+import ru.ipccenter.plagiarism.solutions.SolutionsPair
+import ru.ipccenter.plagiarism.solutions.Task
 
 import static com.madgag.interval.SimpleInterval.interval
 import static com.madgag.interval.BeforeOrAfter.AFTER
 import static com.madgag.interval.BeforeOrAfter.BEFORE
 
-import ru.ipccenter.plagiarism.*
-import ru.ipccenter.plagiarism.impl.*
-import ru.ipccenter.plagiarism.detectors.*
+import ru.ipccenter.plagiarism.solutions.impl.*
 
 final MINIMUM_MATCH_LENGTH = 8
 

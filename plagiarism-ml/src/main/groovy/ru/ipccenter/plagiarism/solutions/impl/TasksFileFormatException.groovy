@@ -1,4 +1,4 @@
-package ru.ipccenter.plagiarism.impl
+package ru.ipccenter.plagiarism.solutions.impl
 
 /**
  *

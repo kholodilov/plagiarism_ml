@@ -1,8 +1,4 @@
-package ru.ipccenter.plagiarism.model
-
-import ru.ipccenter.plagiarism.model.SolutionsPair
-import ru.ipccenter.plagiarism.model.Task
-
+package ru.ipccenter.plagiarism.solutions
 /**
  *
  * @author kholodilov

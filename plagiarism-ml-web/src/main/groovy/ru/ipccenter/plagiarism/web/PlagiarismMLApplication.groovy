@@ -1,7 +1,7 @@
 package ru.ipccenter.plagiarism.web
 
-import ru.ipccenter.plagiarism.impl.SolutionRepositoryFSImpl
-import ru.ipccenter.plagiarism.impl.TaskRepositoryFileImpl
+import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
+import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 
 import javax.ws.rs.core.Application
 

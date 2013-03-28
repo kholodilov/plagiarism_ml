@@ -1,6 +1,6 @@
-package ru.ipccenter.plagiarism.detectors
+package ru.ipccenter.plagiarism.detectors.impl
 
-import ru.ipccenter.plagiarism.model.DetectionResult
+import ru.ipccenter.plagiarism.detectors.DetectionResult
 
 /**
  *

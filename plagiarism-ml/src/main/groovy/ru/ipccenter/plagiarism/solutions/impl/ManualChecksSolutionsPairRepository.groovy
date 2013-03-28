@@ -1,6 +1,6 @@
-package ru.ipccenter.plagiarism.impl
+package ru.ipccenter.plagiarism.solutions.impl
 
-import ru.ipccenter.plagiarism.model.*
+import ru.ipccenter.plagiarism.solutions.*
 
 /**
  *

@@ -1,10 +1,10 @@
-package ru.ipccenter.plagiarism.impl
+package ru.ipccenter.plagiarism.solutions.impl
 
-import ru.ipccenter.plagiarism.model.Author
-import ru.ipccenter.plagiarism.model.Solution
-import ru.ipccenter.plagiarism.model.SolutionNotFoundException
-import ru.ipccenter.plagiarism.model.SolutionRepository
-import ru.ipccenter.plagiarism.model.Task
+import ru.ipccenter.plagiarism.solutions.Author
+import ru.ipccenter.plagiarism.solutions.Solution
+import ru.ipccenter.plagiarism.solutions.SolutionNotFoundException
+import ru.ipccenter.plagiarism.solutions.SolutionRepository
+import ru.ipccenter.plagiarism.solutions.Task
 
 /**
  *

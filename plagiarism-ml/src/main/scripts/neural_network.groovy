@@ -9,11 +9,11 @@ import org.encog.ml.train.MLTrain
 import org.encog.neural.networks.BasicNetwork
 import org.encog.neural.networks.layers.BasicLayer
 import org.encog.neural.networks.training.propagation.back.Backpropagation
-import ru.ipccenter.plagiarism.impl.SolutionRepositoryFSImpl
-import ru.ipccenter.plagiarism.model.Task
-import ru.ipccenter.plagiarism.detectors.JCCDDetector
-import ru.ipccenter.plagiarism.detectors.PlaggieDetector
-import ru.ipccenter.plagiarism.impl.ManualChecksSolutionsPairRepository
+import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
+import ru.ipccenter.plagiarism.solutions.Task
+import ru.ipccenter.plagiarism.detectors.impl.JCCDDetector
+import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
+import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 
 final TASKS = [
         new Task("array1", "Array3dImpl.java"),

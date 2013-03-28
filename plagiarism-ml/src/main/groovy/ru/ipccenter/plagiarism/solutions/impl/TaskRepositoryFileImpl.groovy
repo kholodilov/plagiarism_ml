@@ -1,8 +1,8 @@
-package ru.ipccenter.plagiarism.impl
+package ru.ipccenter.plagiarism.solutions.impl
 
-import ru.ipccenter.plagiarism.model.Task
-import ru.ipccenter.plagiarism.model.TaskNotFoundException
-import ru.ipccenter.plagiarism.model.TaskRepository
+import ru.ipccenter.plagiarism.solutions.Task
+import ru.ipccenter.plagiarism.solutions.TaskNotFoundException
+import ru.ipccenter.plagiarism.solutions.TaskRepository
 
 /**
  *

@@ -1,6 +1,6 @@
 package ru.ipccenter.plagiarism.web
 
-import ru.ipccenter.plagiarism.model.*
+import ru.ipccenter.plagiarism.solutions.*
 
 /**
  *
@@ -46,4 +46,18 @@ class ComparisonHelper
         }
     }
 
+    def getLeftSource()
+    {
+        return leftSource
+    }
+
+    def getRightSource()
+    {
+        return rightSource
+    }
+
+    def getInfo()
+    {
+        return info
+    }
 }
