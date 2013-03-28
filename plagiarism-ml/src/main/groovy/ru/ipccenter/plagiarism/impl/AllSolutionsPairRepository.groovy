@@ -28,7 +28,7 @@ class AllSolutionsPairRepository implements SolutionsPairRepository
     @Override
     List<SolutionsPair> findFor(Task task)
     {
-        return makeSolutionsPairs(loadAllSolutionsFor(task))
+        return makeSolutionsPairs(solutionRepository.findAllSolutionsFor(task))
     }
 
     Map<Task, List<Solution>> loadAllSolutions()
@@ -36,15 +36,11 @@ class AllSolutionsPairRepository implements SolutionsPairRepository
         Map<Task, List<Solution>> taskSolutions = [:]
 
         tasks.each { task ->
-            taskSolutions[task] = loadAllSolutionsFor(task)
+            taskSolutions[task] = solutionRepository.findAllSolutionsFor(task)
         }
         return taskSolutions
     }
 
-    private List<Solution> loadAllSolutionsFor(Task task)
-    {
-        return solutionRepository.findAllSolutionsFor(task)
-    }
 
     private Map<Task, List<SolutionsPair>> makeSolutionsPairs(Map<Task, List<Solution>> taskSolutions)
     {

@@ -1,8 +1,6 @@
 package ru.ipccenter.plagiarism.web
 
 import com.sun.jersey.api.view.Viewable
-import ru.ipccenter.plagiarism.impl.SolutionRepositoryFSImpl
-import ru.ipccenter.plagiarism.impl.TaskRepositoryFileImpl
 
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -12,7 +10,7 @@ import javax.ws.rs.QueryParam
 /**
  * @author dmitry
  */
-@Path("/")
+@Path("/checker")
 @Produces("text/html")
 class ManualChecker
 {

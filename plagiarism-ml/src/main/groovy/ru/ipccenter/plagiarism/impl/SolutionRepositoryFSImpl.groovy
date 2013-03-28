@@ -14,6 +14,8 @@ class SolutionRepositoryFSImpl implements SolutionRepository
 {
     private final String dataDirectoryPath
 
+    private final random = new Random()
+
     SolutionRepositoryFSImpl(String dataDirectoryPath)
     {
         this.dataDirectoryPath = dataDirectoryPath
@@ -33,6 +35,17 @@ class SolutionRepositoryFSImpl implements SolutionRepository
             }
         }
         return solutions
+    }
+
+    @Override
+    Solution findRandomSolutionFor(Task task)
+    {
+        def solutions = findAllSolutionsFor(task)
+        if (solutions.isEmpty())
+        {
+            throw new SolutionNotFoundException("Task ${task} doesn't have any solutions")
+        }
+        return solutions[random.nextInt(solutions.size())]
     }
 
     @Override

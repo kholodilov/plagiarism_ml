@@ -1,8 +1,6 @@
 package ru.ipccenter.plagiarism.web
 
-import ru.ipccenter.plagiarism.model.Solution
-import ru.ipccenter.plagiarism.model.SolutionRepository
-import ru.ipccenter.plagiarism.model.TaskRepository
+import ru.ipccenter.plagiarism.model.*
 
 /**
  *
@@ -18,69 +16,34 @@ class ComparisonHelper
     private final TaskRepository taskRepository
     private final SolutionRepository solutionRepository
 
-    private final random = new Random()
-
     ComparisonHelper(TaskRepository taskRepository, SolutionRepository solutionRepository)
     {
         this.taskRepository = taskRepository
         this.solutionRepository = solutionRepository
     }
 
-    def getLeftSource()
-    {
-        return leftSource
-    }
-
-    def getRightSource()
-    {
-        return rightSource
-    }
-
-    def getInfo()
-    {
-        return info
-    }
-
-    public void reload(String task_name, String author1, String author2)
+    public void reload(String task_name, String author1_name, String author2_name)
     {
         def task = taskRepository.find(task_name)
-        def solutions = solutionRepository.findAllSolutionsFor(task)
+        def author1 = new Author(author1_name)
+        def author2 = new Author(author2_name)
 
-        def solution1 = getSolutionForAuthorOrRandomSolution(solutions, author1)
-        if (solution1 == null)
-        {
-            renderMissingSolution(task_name, author1)
-            return
-        }
+        def solution1 = findOrGetRandomSolution(task, author1)
+        def solution2 = findOrGetRandomSolution(task, author2)
 
-        def solution2 = getSolutionForAuthorOrRandomSolution(solutions, author2)
-        if (solution2 == null)
-        {
-            renderMissingSolution(task_name, author2)
-            return
-        }
-
-        info = solution1.author.name + " " + solution2.author.name
+        info = "$solution1.author $solution2.author"
         leftSource = solution1.file.text
         rightSource = solution2.file.text
     }
 
-    private Solution getSolutionForAuthorOrRandomSolution(List<Solution> solutions, String author)
+    private Solution findOrGetRandomSolution(Task task, Author author1)
     {
-        return author != null ?
-                solutions.find { it.author.name == author } :
-                getRandomSolution(solutions)
-    }
-
-    private getRandomSolution(List<Solution> solutions)
-    {
-        return solutions[random.nextInt(solutions.size())]
-    }
-
-    private renderMissingSolution(String task, String author) {
-        info = "Cannot find solution of task '$task' for author '$author'"
-        leftSource = ""
-        rightSource = ""
+        try {
+            return solutionRepository.findSolutionFor(task, author1)
+        }
+        catch (SolutionNotFoundException e) {
+            return solutionRepository.findRandomSolutionFor(task)
+        }
     }
 
 }
