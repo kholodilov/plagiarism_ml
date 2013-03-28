@@ -20,7 +20,7 @@ class PlagiarismMLApplication extends Application
         Set<Object> singletons = new HashSet<Object>()
 
         singletons.add(new FreemarkerViewProcessor())
-        singletons.add(new ManualChecker(
+        singletons.add(new ComparisonService(
                         new ComparisonHelper(
                             new TaskRepositoryFileImpl(DATA_DIRECTORY_PATH),
                             new SolutionRepositoryFSImpl(DATA_DIRECTORY_PATH))

@@ -7,11 +7,7 @@ import ru.ipccenter.plagiarism.solutions.*
  * @author kholodilov
  */
 class ComparisonHelper
-
 {
-    private leftSource
-    private rightSource
-    private info
 
     private final TaskRepository taskRepository
     private final SolutionRepository solutionRepository
@@ -22,7 +18,7 @@ class ComparisonHelper
         this.solutionRepository = solutionRepository
     }
 
-    public void reload(String task_name, String author1_name, String author2_name)
+    ComparisonResult simpleComparison(String task_name, String author1_name, String author2_name)
     {
         def task = taskRepository.find(task_name)
         def author1 = new Author(author1_name)
@@ -31,9 +27,19 @@ class ComparisonHelper
         def solution1 = findOrGetRandomSolution(task, author1)
         def solution2 = findOrGetRandomSolution(task, author2)
 
-        info = "$solution1.author $solution2.author"
-        leftSource = solution1.file.text
-        rightSource = solution2.file.text
+        return new ComparisonResult(
+            solution1.file.text,
+            solution2.file.text,
+            "$solution1.author $solution2.author")
+    }
+
+    ComparisonResult plaggieComparison(
+            String task_name, String author1_name, String author2_name, int minimumMatchLengthi)
+    {
+        return new ComparisonResult(
+                "",
+                "",
+                "")
     }
 
     private Solution findOrGetRandomSolution(Task task, Author author1)
@@ -46,18 +52,4 @@ class ComparisonHelper
         }
     }
 
-    def getLeftSource()
-    {
-        return leftSource
-    }
-
-    def getRightSource()
-    {
-        return rightSource
-    }
-
-    def getInfo()
-    {
-        return info
-    }
 }
