@@ -40,7 +40,7 @@ class PlaggieDetector implements Detector
     }
 
     @Override
-    DetectionResult performDetection(SolutionsPair pair)
+    PlaggieDetectionResult performDetection(SolutionsPair pair)
     {
         def submission1 = new SingleFileSubmission(pair.solution1.file)
         def submission2 = new SingleFileSubmission(pair.solution2.file)
@@ -65,8 +65,9 @@ class PlaggieDetector implements Detector
         def total_tokens = fileDetectionResult.tokensA.size()
         def tokenFrequencies = token_counts.collectEntries { token, count -> [token, count / total_tokens] }
 
-        def detectionResult = new PlaggieDetectionResult(fileDetectionResult.similarityA, tokenFrequencies)
-        detectionResult.report = generateDetectionReport(fileDetectionResult)
+        def report = generateDetectionReport(fileDetectionResult)
+        def detectionResult = new PlaggieDetectionResult(
+                fileDetectionResult.similarityA, tokenFrequencies, report)
 
         return detectionResult
 

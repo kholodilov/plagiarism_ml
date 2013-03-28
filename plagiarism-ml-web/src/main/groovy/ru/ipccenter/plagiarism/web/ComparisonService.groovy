@@ -2,6 +2,7 @@ package ru.ipccenter.plagiarism.web
 
 import com.sun.jersey.api.view.Viewable
 
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -39,7 +40,7 @@ class ComparisonService
             @QueryParam("task") String task,
             @QueryParam("author1") String author1,
             @QueryParam("author2") String author2,
-            @QueryParam("minMatch") int minimumMatchLength)
+            @QueryParam("minMatch") @DefaultValue("8") int minimumMatchLength)
     {
         def comparisonResult = comparisonHelper.plaggieComparison(task, author1, author2, minimumMatchLength)
 
