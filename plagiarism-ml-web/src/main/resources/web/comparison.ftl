@@ -4,7 +4,16 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     </head>
     <body>
-        <div style="width: 100%">${model.comparisonResult.info}</div>
+        <form>
+            Authors: <input type="text" name="authors" />
+            <input type="submit" value="Compare" />
+        </form>
+
+        <hr/>
+
+        <div style="width: 100%; font-weight: bold">${model.comparisonResult.info}</div>
+        <br/>
+
         <div style="float: left; width: 50%">
             <textarea style="width: 100%; height: 100%">${model.comparisonResult.leftSource}</textarea>
         </div>

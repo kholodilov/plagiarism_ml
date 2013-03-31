@@ -23,10 +23,12 @@ class ComparisonHelper
     {
         def solutionsPair = getSolutionsPair(task_name, author1_name, author2_name)
 
+        def info = "$solutionsPair.solution1.author $solutionsPair.solution2.author"
+
         return new ComparisonResult(
                 solutionsPair.solution1.file.text,
                 solutionsPair.solution2.file.text,
-                "$solutionsPair.solution1.author $solutionsPair.solution2.author")
+                info)
     }
 
     ComparisonResult plaggieComparison(
@@ -50,22 +52,22 @@ class ComparisonHelper
     private SolutionsPair getSolutionsPair(String task_name, String author1_name, String author2_name)
     {
         def task = taskRepository.find(task_name)
-        def author1 = new Author(author1_name)
-        def author2 = new Author(author2_name)
 
-        def solution1 = findOrGetRandomSolution(task, author1)
-        def solution2 = findOrGetRandomSolution(task, author2)
+        def solution1 = findOrGetRandomSolution(task, author1_name)
+        def solution2 = findOrGetRandomSolution(task, author2_name)
 
         def solutionsPair = new SolutionsPair(solution1, solution2)
         return solutionsPair
     }
 
-    private Solution findOrGetRandomSolution(Task task, Author author1)
+    private Solution findOrGetRandomSolution(Task task, String author_name)
     {
-        try {
-            return solutionRepository.findSolutionFor(task, author1)
+        if (author_name != null)
+        {
+            return solutionRepository.findSolutionFor(task, new Author(author_name))
         }
-        catch (SolutionNotFoundException e) {
+        else
+        {
             return solutionRepository.findRandomSolutionFor(task)
         }
     }
