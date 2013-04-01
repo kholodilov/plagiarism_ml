@@ -30,7 +30,7 @@ class ComparisonService
 
     @GET
     @Path("plain/{task}")
-    public Viewable simpleComparisonPage(
+    public Viewable plainComparisonPage(
             @PathParam("task") String task,
             @QueryParam("authors") String authors_pair,
             @QueryParam("author1") String author1,
@@ -40,7 +40,7 @@ class ComparisonService
 
         def comparisonResult = comparisonHelper.simpleComparison(task, authors[0], authors[1])
 
-        return makeComparisonPage(comparisonResult)
+        return makeComparisonPage("plain", comparisonResult, authors)
     }
 
     @GET
@@ -56,7 +56,8 @@ class ComparisonService
 
         def comparisonResult = comparisonHelper.plaggieComparison(task, authors[0], authors[1], minimumMatchLength)
 
-        return makeComparisonPage(comparisonResult)
+        return makeComparisonPage("plaggie", comparisonResult, authors,
+                                    ["minMatch" : minimumMatchLength])
     }
 
     private static String[] getAuthors(String author1, String author2, String authors_pair)
@@ -82,11 +83,15 @@ class ComparisonService
         }
     }
 
-    private static Viewable makeComparisonPage(ComparisonResult comparisonResult)
+    private static Viewable makeComparisonPage(String method,
+            ComparisonResult comparisonResult, String[] authors, Map<String, Object> customParameters=[:])
     {
         Map<String, Object> model = new HashMap<String, Object>();
+        model.put("comparisonMethod", method);
         model.put("comparisonResult", comparisonResult);
-        return new Viewable("/web/comparison.ftl", model);
+        model.put("authors", authors.join(" "));
+        customParameters.each { key, value -> model.put(key, value) }
+        return new Viewable("/web/comparison/comparison.ftl", model);
     }
 
 }

@@ -6,7 +6,8 @@
     <body>
         <div style="width: 100%; height: 10%">
             <form>
-                Authors: <input type="text" name="authors" />
+                Authors: <input type="text" name="authors" value="${model.authors}" />
+                <#include "/web/comparison/custom/form/${model.comparisonMethod}.ftl"/>
                 <input type="submit" value="Compare" />
             </form>
 
