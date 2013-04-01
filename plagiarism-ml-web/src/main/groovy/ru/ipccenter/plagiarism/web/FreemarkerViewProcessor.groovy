@@ -1,29 +1,23 @@
-package ru.ipccenter.plagiarism.web;
+package ru.ipccenter.plagiarism.web
 
-import com.sun.jersey.api.container.ContainerException;
-import com.sun.jersey.api.view.Viewable;
-import com.sun.jersey.spi.template.ViewProcessor;
-import freemarker.ext.beans.BeansWrapper;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateExceptionHandler;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.Map;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.Provider;
+import com.sun.jersey.api.container.ContainerException
+import com.sun.jersey.api.view.Viewable
+import com.sun.jersey.spi.template.ViewProcessor
+import freemarker.ext.beans.BeansWrapper
+import freemarker.template.Configuration
+import freemarker.template.Template
+import freemarker.template.TemplateException
+import freemarker.template.TemplateExceptionHandler
+
+import javax.servlet.ServletContext
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.UriInfo
+import javax.ws.rs.ext.Provider
 
 @Provider
 class FreemarkerViewProcessor implements ViewProcessor<String>
 {
-    @Context
     private UriInfo uriInfo;
-    @Context
     private ServletContext servletContext;
     //
     private final Configuration configuration;
@@ -68,5 +62,17 @@ class FreemarkerViewProcessor implements ViewProcessor<String>
         } catch (TemplateException te) {
             throw new ContainerException(te);
         }
+    }
+
+    @Context
+    void setServletContext(ServletContext servletContext)
+    {
+        this.servletContext = servletContext
+    }
+
+    @Context
+    void setUriInfo(UriInfo uriInfo)
+    {
+        this.uriInfo = uriInfo
     }
 }

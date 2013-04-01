@@ -12,7 +12,7 @@
 
     <servlet-mapping>
         <servlet-name>ru.ipccenter.plagiarism.web.PlagiarismMLApplication</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/plagiarism-ml/*</url-pattern>
     </servlet-mapping>
 
 </web-app>
