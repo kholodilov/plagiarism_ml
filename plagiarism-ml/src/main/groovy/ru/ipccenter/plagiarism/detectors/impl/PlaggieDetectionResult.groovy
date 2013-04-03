@@ -12,17 +12,17 @@ class PlaggieDetectionResult extends DetectionResult
     private Map<String, Double> tokenFrequencies
     private String firstSourceWithMatchedLines
     private String secondSourceWithMatchedLines
+    private final List<Duplicate> duplicates
 
-    PlaggieDetectionResult(double similarity)
+    PlaggieDetectionResult(double similarity, String report,
+                           Map<String, Double> tokenFrequencies,
+                           List<Duplicate> duplicates)
     {
         super(similarity)
-    }
 
-    PlaggieDetectionResult(double similarity, Map<String, Double> tokenFrequencies, String report)
-    {
-        this(similarity)
-        this.tokenFrequencies = tokenFrequencies
         this.report = report
+        this.tokenFrequencies = tokenFrequencies
+        this.duplicates = duplicates
 
         def reportLines = report.readLines()
         def firstSourceHeaderLine = reportLines.findIndexOf { it == "File A with matched lines:" }
@@ -37,6 +37,11 @@ class PlaggieDetectionResult extends DetectionResult
     Map<String, Double> getTokenFrequencies()
     {
         return tokenFrequencies
+    }
+
+    List<Duplicate> getDuplicates()
+    {
+        return duplicates
     }
 
     def getFirstSourceWithMatchedLines()

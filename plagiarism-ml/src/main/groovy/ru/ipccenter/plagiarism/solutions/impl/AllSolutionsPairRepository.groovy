@@ -9,20 +9,18 @@ import ru.ipccenter.plagiarism.solutions.*
 class AllSolutionsPairRepository implements SolutionsPairRepository
 {
     private final SolutionRepository solutionRepository
-    private final ArrayList<Task> tasks
     private final File testDataDirectory
 
-    AllSolutionsPairRepository(SolutionRepository solutionRepository, List<Task> tasks, File testDataDirectory)
+    AllSolutionsPairRepository(SolutionRepository solutionRepository, File testDataDirectory)
     {
         this.solutionRepository = solutionRepository
-        this.tasks = tasks
         this.testDataDirectory = testDataDirectory
     }
 
     @Override
-    Map<Task, List<SolutionsPair>> loadSolutionsPairs()
+    Map<Task, List<SolutionsPair>> loadSolutionsPairs(List<Task> listOfTasks)
     {
-        return makeSolutionsPairs(loadAllSolutions())
+        return makeSolutionsPairs(loadAllSolutions(listOfTasks))
     }
 
     @Override
@@ -31,7 +29,7 @@ class AllSolutionsPairRepository implements SolutionsPairRepository
         return makeSolutionsPairs(solutionRepository.findAllSolutionsFor(task))
     }
 
-    Map<Task, List<Solution>> loadAllSolutions()
+    Map<Task, List<Solution>> loadAllSolutions(List<Task> tasks)
     {
         Map<Task, List<Solution>> taskSolutions = [:]
 

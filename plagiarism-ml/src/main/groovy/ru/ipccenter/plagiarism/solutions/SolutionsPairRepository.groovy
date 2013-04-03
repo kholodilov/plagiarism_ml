@@ -5,6 +5,6 @@ package ru.ipccenter.plagiarism.solutions
  */
 public interface SolutionsPairRepository
 {
-    Map<Task, List<SolutionsPair>> loadSolutionsPairs()
+    Map<Task, List<SolutionsPair>> loadSolutionsPairs(List<Task> listOfTasks)
     List<SolutionsPair> findFor(Task task)
 }

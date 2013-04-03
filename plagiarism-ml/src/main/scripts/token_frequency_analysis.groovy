@@ -46,12 +46,13 @@ if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
-    task_solution_pairs =
-        new ManualChecksSolutionsPairRepository(solutionRepository, tasks, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE).loadSolutionsPairs()
+    final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
+    task_solution_pairs = repository.loadSolutionsPairs(tasks)
 }
 else
 {
-    task_solution_pairs = new AllSolutionsPairRepository(solutionRepository, tasks, test_data_directory).loadSolutionsPairs()
+    final AllSolutionsPairRepository repository = new AllSolutionsPairRepository(solutionRepository, test_data_directory)
+    task_solution_pairs = repository.loadSolutionsPairs(tasks)
 }
 
 def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)

@@ -17,7 +17,6 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 
     ManualChecksSolutionsPairRepository(
             SolutionRepository solutionRepository,
-            List<Task> tasks,
             File manualChecksDirectory,
             String dataDirectoryPath,
             def maximumSimilarityDegree)
@@ -26,14 +25,13 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
         this.maximumSimilarityDegree = maximumSimilarityDegree
         this.dataDirectoryPath = dataDirectoryPath
         this.manualChecksDirectory = manualChecksDirectory
-        this.tasks = tasks
     }
 
     @Override
-    Map<Task, List<SolutionsPair>> loadSolutionsPairs()
+    Map<Task, List<SolutionsPair>> loadSolutionsPairs(List<Task> listOfTasks)
     {
         Map<Task, List<SolutionsPair>> taskSolutionPairs = [:]
-        tasks.each { task ->
+        listOfTasks.each { task ->
             taskSolutionPairs[task] = findFor(task)
         }
         return taskSolutionPairs;
