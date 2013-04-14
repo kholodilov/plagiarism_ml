@@ -31,7 +31,7 @@ def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
-final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
+final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
 def task_solution_pairs = repository.loadSolutionsPairs(TASKS)
 
 DETECTORS.each { detectorName, detector ->

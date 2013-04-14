@@ -9,22 +9,16 @@ import ru.ipccenter.plagiarism.solutions.*
 class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 {
 
-    private final List<Task> tasks
-    private final File manualChecksDirectory
     private final String dataDirectoryPath
     private final Object maximumSimilarityDegree
     private final SolutionRepository solutionRepository
 
     ManualChecksSolutionsPairRepository(
-            SolutionRepository solutionRepository,
-            File manualChecksDirectory,
-            String dataDirectoryPath,
-            def maximumSimilarityDegree)
+            SolutionRepository solutionRepository, String dataDirectoryPath, def maximumSimilarityDegree)
     {
         this.solutionRepository = solutionRepository
         this.maximumSimilarityDegree = maximumSimilarityDegree
         this.dataDirectoryPath = dataDirectoryPath
-        this.manualChecksDirectory = manualChecksDirectory
     }
 
     @Override
@@ -42,13 +36,13 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
     {
         List<SolutionsPair> solutionsPairs = []
 
-        def manual_checks_file = new File(manualChecksDirectory, task.name + ".txt")
+        def manual_checks_file = new File(dataDirectoryPath + "/manual_checks", task.name + ".txt")
         if (manual_checks_file.exists()) {
             manual_checks_file.eachLine { solutionsPairLine ->
                 if (!solutionsPairLine.startsWith("#")) {
                     try {
                         solutionsPairs.add(
-                                loadSolutionsPair(dataDirectoryPath, task, solutionsPairLine)
+                                loadSolutionsPair(task, solutionsPairLine)
                         )
                     } catch (ManualCheckParseException e) {
                         println e.message
@@ -61,7 +55,7 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
         return solutionsPairs
     }
 
-    private SolutionsPair loadSolutionsPair(String dataDirectoryPath, Task task, String solutionsPairLine)
+    private SolutionsPair loadSolutionsPair(Task task, String solutionsPairLine)
     {
         def matcher = solutionsPairLine =~ /(\S+) (\S+) (\d+)/
         if (!matcher.matches())

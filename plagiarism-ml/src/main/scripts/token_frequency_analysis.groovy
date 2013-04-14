@@ -32,7 +32,6 @@ final ZERO_MEAN_VALUE_THRESHOLD = 0.0
 def dataDirectoryPath = args[0]
 def work_directory = new File(dataDirectoryPath)
 def test_data_directory = new File(work_directory, "test_data")
-def manual_checks_directory = new File(work_directory, "manual_checks")
 def results_directory = new File(work_directory, "results")
 def comparison_results_directory = new File(results_directory, "comparison")
 
@@ -46,7 +45,7 @@ if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
-    final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, manual_checks_directory, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
+    final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
     task_solution_pairs = repository.loadSolutionsPairs(tasks)
 }
 else
