@@ -1,12 +1,13 @@
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
 import ru.ipccenter.plagiarism.detectors.impl.TokenSequence
 import ru.ipccenter.plagiarism.similarity.SimilarityCalculator
+import ru.ipccenter.plagiarism.solutions.SolutionsPair
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 
 final int MAXIMUM_SIMILARITY_DEGREE = 4
-final int MINIMUM_MATCH_LENGTH = 8
+final int MINIMUM_MATCH_LENGTH = 11
 
 def dataDirectoryPath = args[0]
 
@@ -34,5 +35,35 @@ taskRepository.findAll().each { task ->
         }
     }
     println "Total: ${falseDuplicateSequences.values().sum()}, unique: ${falseDuplicateSequences.size()}"
-    println falseDuplicateSequences.findAll { _, count -> count > 1}.entrySet().join("\n")
+
+    println "In control group:"
+    int totalFound = 0
+    controlPairs.each { pair ->
+        def detectionResult = detector.performDetection(pair)
+        def found = falseDuplicateSequences.keySet().intersect(detectionResult.duplicates.collect { it.tokens })
+        if (!found.isEmpty())
+        {
+            totalFound += found.size()
+            println "$pair (${estimationQuality(pair, similarityCalculator)}): $found"
+        }
+    }
+    println "Total: $totalFound"
+}
+
+String estimationQuality(SolutionsPair solutionsPair, SimilarityCalculator similarityCalculator)
+{
+    def estimatedDegree = similarityCalculator.degreeOf(solutionsPair.estimatedSimilarity)
+    def detectedDegree = similarityCalculator.degreeOf(solutionsPair.detectedSimilarity)
+    if (estimatedDegree < detectedDegree)
+    {
+        return "false positive"
+    }
+    else if (estimatedDegree > detectedDegree)
+    {
+        return "false negative"
+    }
+    else
+    {
+        return "correctly detected"
+    }
 }

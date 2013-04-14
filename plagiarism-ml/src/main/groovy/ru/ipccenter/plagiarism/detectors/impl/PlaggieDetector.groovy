@@ -50,8 +50,9 @@ class PlaggieDetector implements Detector
         def submissionDetectionResult = new SubmissionDetectionResult(submission1, submission2, checker, MINIMUM_SIMILARITY_VALUE)
 
         DetectionResult plaggieResult = submissionDetectionResult.getFileDetectionResults()[0]
+        def detectedSimilarity = plaggieResult.similarityA
         def ourResult = aPlaggieDetectionResult()
-                            .withSimilarity(plaggieResult.similarityA)
+                            .withSimilarity(detectedSimilarity)
                             .withReport(generateDetectionReport(plaggieResult));
 
         def totalTokensCount = plaggieResult.tokensA.size()
@@ -62,6 +63,8 @@ class PlaggieDetector implements Detector
             tokenFrequenciesCalculator.addTokens(tokensInMatch)
             ourResult.withDuplicate(new Duplicate(matchedTile.id, new TokenSequence(tokensInMatch)))
         }
+
+        pair.detectedSimilarity = detectedSimilarity
 
         return ourResult
                 .withTokenFrequencies(tokenFrequenciesCalculator.calculate())

@@ -1,9 +1,5 @@
 package ru.ipccenter.plagiarism.similarity
 
-import com.madgag.interval.Interval
-
-import static com.madgag.interval.SimpleInterval.interval
-
 /**
  *
  * @author dmitry
@@ -11,19 +7,26 @@ import static com.madgag.interval.SimpleInterval.interval
 class SimilarityCalculator
 {
     private final int maxDegree
-    private final List<Interval<BigDecimal>> intervals
+    private final List<SimilarityDegree> degrees
 
     SimilarityCalculator(int maxDegree)
     {
         this.maxDegree = maxDegree
-        this.intervals =
-            (0..maxDegree).collect { center ->
-                interval((center - 0.5) / maxDegree, (center + 0.5) / maxDegree)
-            }
+        this.degrees = (0..maxDegree).collect { degree -> new SimilarityDegree(degree, maxDegree) }
     }
 
     boolean isZeroDegree(double similarity)
     {
-        intervals[0].contains(new BigDecimal(similarity))
+        degrees[0].equalTo(similarity)
+    }
+
+    SimilarityDegree degreeOf(double similarity)
+    {
+        def degree = degrees.find { it.equalTo(similarity) }
+        if (degree == null)
+        {
+            throw new SimilarityCalculatorException("Similarity is out of bounds: $similarity")
+        }
+        degree
     }
 }
