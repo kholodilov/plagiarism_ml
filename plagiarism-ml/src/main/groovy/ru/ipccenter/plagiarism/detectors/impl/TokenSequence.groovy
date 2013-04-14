@@ -24,4 +24,19 @@ class TokenSequence implements Iterable<String>
     {
         return "[" + tokens.join(", ") + "]";
     }
+
+    boolean equals(other)
+    {
+        if (this.is(other)) return true
+        if (getClass() != other.class) return false
+
+        if (tokens != ((TokenSequence) other).tokens) return false
+
+        return true
+    }
+
+    int hashCode()
+    {
+        return tokens.hashCode()
+    }
 }
