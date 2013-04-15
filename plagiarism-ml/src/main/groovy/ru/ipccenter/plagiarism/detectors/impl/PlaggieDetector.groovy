@@ -51,11 +51,13 @@ class PlaggieDetector implements Detector
 
         DetectionResult plaggieResult = submissionDetectionResult.getFileDetectionResults()[0]
         def detectedSimilarity = plaggieResult.similarityA
+        def totalTokensCount = plaggieResult.tokensA.size()
+
         def ourResult = aPlaggieDetectionResult()
                             .withSimilarity(detectedSimilarity)
+                            .withTotalTokensCount(totalTokensCount)
                             .withReport(generateDetectionReport(plaggieResult));
 
-        def totalTokensCount = plaggieResult.tokensA.size()
         def tokenFrequenciesCalculator = new TokenFrequenciesCalculator(totalTokensCount)
 
         plaggieResult.matches.each { MatchedTile matchedTile ->

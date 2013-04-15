@@ -19,12 +19,18 @@ class TokenSequence implements Iterable<String>
         return tokens.iterator()
     }
 
+    int size()
+    {
+        tokens.size()
+    }
+
     @Override
-    public String toString()
+    String toString()
     {
         return "[" + tokens.join(", ") + "]";
     }
 
+    @Override
     boolean equals(other)
     {
         if (this.is(other)) return true
@@ -35,6 +41,7 @@ class TokenSequence implements Iterable<String>
         return true
     }
 
+    @Override
     int hashCode()
     {
         return tokens.hashCode()

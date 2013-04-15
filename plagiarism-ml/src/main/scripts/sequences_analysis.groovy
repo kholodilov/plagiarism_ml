@@ -1,6 +1,7 @@
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
 import ru.ipccenter.plagiarism.detectors.impl.TokenSequence
 import ru.ipccenter.plagiarism.similarity.SimilarityCalculator
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.SolutionsPair
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
@@ -50,27 +51,32 @@ taskRepository.findAll().each { task ->
             {
                 totalFalseDuplicatesFound += found.size()
                 totalPairsCorrected++
-                println "$pair (${estimationQuality(pair, similarityCalculator)}): $found"
+                double correctedSimilarity =
+                    pair.detectedSimilarity - found.collect { it.size() }.sum() / detectionResult.totalTokensCount
+                println "$pair (${estimationQualityAndCorrection(pair, correctedSimilarity, similarityCalculator)})" //: $found"
             }
         }
     }
     println "False duplicates found: $totalFalseDuplicatesFound, pairs corrected: $totalPairsCorrected"
 }
 
-String estimationQuality(SolutionsPair solutionsPair, SimilarityCalculator similarityCalculator)
+String estimationQualityAndCorrection(SolutionsPair solutionsPair, double correctedSimilarity,
+                                      SimilarityCalculator similarityCalculator)
 {
     def estimatedDegree = similarityCalculator.degreeOf(solutionsPair.estimatedSimilarity)
     def detectedDegree = similarityCalculator.degreeOf(solutionsPair.detectedSimilarity)
-    if (estimatedDegree < detectedDegree)
-    {
+    def correctedDegree = similarityCalculator.degreeOf(correctedSimilarity)
+    return estimationQuality(estimatedDegree, detectedDegree) + " -> " +
+           estimationQuality(estimatedDegree, correctedDegree) + "[" + String.format('%.2f', correctedSimilarity) + "]"
+}
+
+private String estimationQuality(SimilarityDegree estimatedDegree, SimilarityDegree detectedDegree)
+{
+    if (estimatedDegree < detectedDegree) {
         return "false positive"
-    }
-    else if (estimatedDegree > detectedDegree)
-    {
+    } else if (estimatedDegree > detectedDegree) {
         return "false negative"
-    }
-    else
-    {
+    } else {
         return "correctly detected"
     }
 }

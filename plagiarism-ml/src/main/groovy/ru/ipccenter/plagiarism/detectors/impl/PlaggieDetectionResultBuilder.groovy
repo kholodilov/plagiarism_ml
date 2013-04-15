@@ -10,6 +10,7 @@ class PlaggieDetectionResultBuilder
     private String report
     private Map<String, Double> tokenFrequencies
     private List<Duplicate> duplicates = new ArrayList<Duplicate>()
+    private int totalTokensCount
 
     static PlaggieDetectionResultBuilder aPlaggieDetectionResult()
     {
@@ -40,8 +41,14 @@ class PlaggieDetectionResultBuilder
         return this
     }
 
+    PlaggieDetectionResultBuilder withTotalTokensCount(int totalTokensCount)
+    {
+        this.totalTokensCount = totalTokensCount
+        return this
+    }
+
     PlaggieDetectionResult build()
     {
-        return new PlaggieDetectionResult(similarity, report, tokenFrequencies, duplicates)
+        return new PlaggieDetectionResult(similarity, report, tokenFrequencies, duplicates, totalTokensCount)
     }
 }
