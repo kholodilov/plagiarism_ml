@@ -7,7 +7,7 @@ import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 
 final int MAXIMUM_SIMILARITY_DEGREE = 4
-final int MINIMUM_MATCH_LENGTH = 11
+final int MINIMUM_MATCH_LENGTH = 8
 
 def dataDirectoryPath = args[0]
 
@@ -19,13 +19,14 @@ def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)
 def similarityCalculator = new SimilarityCalculator(MAXIMUM_SIMILARITY_DEGREE)
 
 taskRepository.findAll().each { task ->
-    println "###" + task
 
     def allPairs = solutionsPairRepository.findFor(task)
     def pairsWithZeroEstimatedSimilarity =
         allPairs.findAll { similarityCalculator.isZeroDegree(it.estimatedSimilarity) }
     def learningPairs = pairsWithZeroEstimatedSimilarity.subList(0, (int) (allPairs.size() / 2) + 1)
     def controlPairs = allPairs - learningPairs
+
+    println "### $task (learning group: ${learningPairs.size()}, control group: ${controlPairs.size()})"
 
     def falseDuplicateSequences = new HashMap<TokenSequence, Integer>().withDefault{0}
     learningPairs.each { pair ->
@@ -34,20 +35,26 @@ taskRepository.findAll().each { task ->
             falseDuplicateSequences[tokenSequence] += 1
         }
     }
-    println "Total: ${falseDuplicateSequences.values().sum()}, unique: ${falseDuplicateSequences.size()}"
+    println "False duplicate sequences: ${falseDuplicateSequences.values().sum()}," +
+            " unique: ${falseDuplicateSequences.size()}"
 
-    println "In control group:"
-    int totalFound = 0
+    println "False duplicate found in control group:"
+    int totalFalseDuplicatesFound = 0
+    int totalPairsCorrected = 0
     controlPairs.each { pair ->
         def detectionResult = detector.performDetection(pair)
-        def found = falseDuplicateSequences.keySet().intersect(detectionResult.duplicates.collect { it.tokens })
-        if (!found.isEmpty())
+        if (!similarityCalculator.isZeroDegree(pair.detectedSimilarity))
         {
-            totalFound += found.size()
-            println "$pair (${estimationQuality(pair, similarityCalculator)}): $found"
+            def found = falseDuplicateSequences.keySet().intersect(detectionResult.duplicates.collect { it.tokens })
+            if (!found.isEmpty())
+            {
+                totalFalseDuplicatesFound += found.size()
+                totalPairsCorrected++
+                println "$pair (${estimationQuality(pair, similarityCalculator)}): $found"
+            }
         }
     }
-    println "Total: $totalFound"
+    println "False duplicates found: $totalFalseDuplicatesFound, pairs corrected: $totalPairsCorrected"
 }
 
 String estimationQuality(SolutionsPair solutionsPair, SimilarityCalculator similarityCalculator)
