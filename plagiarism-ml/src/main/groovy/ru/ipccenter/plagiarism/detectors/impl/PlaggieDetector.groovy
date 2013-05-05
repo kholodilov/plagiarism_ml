@@ -1,15 +1,6 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
-import plag.parser.CodeTokenizer
-import plag.parser.Debug
-import plag.parser.DetectionResult
-import plag.parser.MatchedTile
-import plag.parser.SimpleSubmissionSimilarityChecker
-import plag.parser.SimpleTokenSimilarityChecker
-import plag.parser.SingleFileSubmission
-import plag.parser.Stats
-import plag.parser.SubmissionDetectionResult
-import plag.parser.SubmissionSimilarityChecker
+import plag.parser.*
 import plag.parser.java.JavaTokenizer
 import plag.parser.java.PlagSym
 import plag.parser.report.SimpleTextReportGenerator
@@ -65,8 +56,6 @@ class PlaggieDetector implements Detector
             tokenFrequenciesCalculator.addTokens(tokensInMatch)
             ourResult.withDuplicate(new Duplicate(matchedTile.id, new TokenSequence(tokensInMatch)))
         }
-
-        pair.detectedSimilarity = detectedSimilarity
 
         return ourResult
                 .withTokenFrequencies(tokenFrequenciesCalculator.calculate())

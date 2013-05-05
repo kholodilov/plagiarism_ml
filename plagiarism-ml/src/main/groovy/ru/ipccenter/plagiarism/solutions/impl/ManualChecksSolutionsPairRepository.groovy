@@ -70,9 +70,6 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
         def solution1 = solutionRepository.findSolutionFor(task, author1)
         def solution2 = solutionRepository.findSolutionFor(task, author2)
 
-        def solutions_pair = new SolutionsPair(solution1, solution2)
-        solutions_pair.setEstimatedSimilarity(estimatedSimilarity);
-
-        return solutions_pair;
+        return new SolutionsPair(solution1, solution2, estimatedSimilarity);
     }
 }

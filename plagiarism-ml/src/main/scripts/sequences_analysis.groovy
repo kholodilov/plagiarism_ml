@@ -1,9 +1,7 @@
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
-import ru.ipccenter.plagiarism.detectors.impl.TokenSequence
+import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveDetector
 import ru.ipccenter.plagiarism.similarity.SimilarityCalculator
 import ru.ipccenter.plagiarism.similarity.SimilarityDegree
-import ru.ipccenter.plagiarism.solutions.SolutionsPair
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
@@ -17,7 +15,7 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
 
-def detector = new PlaggieDetector(MINIMUM_MATCH_LENGTH)
+def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH)
 def similarityCalculator = new SimilarityCalculator(MAXIMUM_SIMILARITY_DEGREE)
 
 taskRepository.findAll().each { task ->
@@ -30,36 +28,25 @@ taskRepository.findAll().each { task ->
 
     println "### $task (learning group: ${learningPairs.size()}, control group: ${controlPairs.size()})"
 
-    def falseDuplicateSequences = new HashMap<TokenSequence, Integer>().withDefault{0}
-    learningPairs.each { pair ->
-        def duplicates = detector.performDetection(pair).duplicates
-        duplicates.collect { it.tokens }.each { tokenSequence ->
-            falseDuplicateSequences[tokenSequence] += 1
-        }
-    }
-    println "False duplicate sequences: ${falseDuplicateSequences.values().sum()}," +
-            " unique: ${falseDuplicateSequences.size()}"
+    detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 
     println "False duplicate found in control group:"
-    int totalFalseDuplicatesFound = 0
+    int totalFalseDuplicatesCount = 0
     int totalPairsCorrected = 0
     def originalDeltas = [] as List<Double>
     def correctedDeltas = [] as List<Double>
     controlPairs.each { pair ->
         def detectionResult = detector.performDetection(pair)
-        def found = falseDuplicateSequences.keySet().intersect(detectionResult.duplicates.collect { it.tokens })
-        double correctedSimilarity =
-            pair.detectedSimilarity - found.collect { it.size() }.sum(0) / detectionResult.totalTokensCount
-        originalDeltas << Math.abs(pair.estimatedSimilarity - pair.detectedSimilarity)
-        correctedDeltas << Math.abs(pair.estimatedSimilarity - correctedSimilarity)
-        if (!(similarityCalculator.isZeroDegree(pair.detectedSimilarity) || found.isEmpty()))
+        originalDeltas << Math.abs(pair.estimatedSimilarity - detectionResult.similarity)
+        correctedDeltas << Math.abs(pair.estimatedSimilarity - detectionResult.correctedSimilarity)
+        totalFalseDuplicatesCount += detectionResult.falseDuplicatesCount
+        if (detectionResult.falseDuplicatesFound && !similarityCalculator.isZeroDegree(detectionResult.similarity))
         {
-            totalFalseDuplicatesFound += found.size()
             totalPairsCorrected++
-            println "$pair (${estimationQualityAndCorrection(pair, correctedSimilarity, similarityCalculator)})" //: $found"
+            println "$pair (${estimationQualityAndCorrection(pair.estimatedSimilarity, detectionResult.similarity, detectionResult.correctedSimilarity, similarityCalculator)})"
         }
     }
-    println "False duplicates found: $totalFalseDuplicatesFound, pairs corrected: $totalPairsCorrected"
+    println "False duplicates found: $totalFalseDuplicatesCount, pairs corrected: $totalPairsCorrected"
     println "Original statistics: " + getStatistics(originalDeltas)
     println "Corrected statistics: " + getStatistics(correctedDeltas)
 }
@@ -70,13 +57,14 @@ private String getStatistics(List<Double> deltas)
     "${format(statistics.mean)}±${format(statistics.standardDeviation)}"
 }
 
-String estimationQualityAndCorrection(SolutionsPair solutionsPair, double correctedSimilarity,
-                                      SimilarityCalculator similarityCalculator)
+String estimationQualityAndCorrection(
+        double estimatedSimilarity, double detectedSimilarity, double correctedSimilarity,
+        SimilarityCalculator similarityCalculator)
 {
-    def estimatedDegree = similarityCalculator.degreeOf(solutionsPair.estimatedSimilarity)
-    def detectedDegree = similarityCalculator.degreeOf(solutionsPair.detectedSimilarity)
+    def estimatedDegree = similarityCalculator.degreeOf(estimatedSimilarity)
+    def detectedDegree = similarityCalculator.degreeOf(detectedSimilarity)
     def correctedDegree = similarityCalculator.degreeOf(correctedSimilarity)
-    return estimationQuality(estimatedDegree, detectedDegree) + " -> " +
+    return estimationQuality(estimatedDegree, detectedDegree) + "[" + format(detectedSimilarity) + "] -> " +
            estimationQuality(estimatedDegree, correctedDegree) + "[" + format(correctedSimilarity) + "]"
 }
 
