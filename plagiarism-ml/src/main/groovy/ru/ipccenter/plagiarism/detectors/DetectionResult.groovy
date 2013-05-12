@@ -1,5 +1,6 @@
 package ru.ipccenter.plagiarism.detectors
 
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.SolutionsPair
 
 /**
@@ -11,6 +12,8 @@ class DetectionResult
     private final SolutionsPair pair
     private final double similarity
     private final String report
+
+    private DetectionQuality detectionQuality
 
     DetectionResult(SolutionsPair pair, double similarity, String report)
     {
@@ -32,6 +35,16 @@ class DetectionResult
     String getReport()
     {
         return report
+    }
+
+    DetectionQuality getQuality()
+    {
+        if (detectionQuality == null)
+        {
+            detectionQuality = new DetectionQuality(
+                    pair.estimatedSimilarityDegree, SimilarityDegree.valueOf(similarity))
+        }
+        return detectionQuality
     }
 
     @Override

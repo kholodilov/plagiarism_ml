@@ -1,5 +1,6 @@
 package ru.ipccenter.plagiarism.solutions.impl
 
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.*
 
 /**
@@ -10,14 +11,12 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 {
 
     private final String dataDirectoryPath
-    private final Object maximumSimilarityDegree
     private final SolutionRepository solutionRepository
 
     ManualChecksSolutionsPairRepository(
-            SolutionRepository solutionRepository, String dataDirectoryPath, def maximumSimilarityDegree)
+            SolutionRepository solutionRepository, String dataDirectoryPath)
     {
         this.solutionRepository = solutionRepository
-        this.maximumSimilarityDegree = maximumSimilarityDegree
         this.dataDirectoryPath = dataDirectoryPath
     }
 
@@ -65,11 +64,11 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
 
         def author1 = new Author(matcher.group(1))
         def author2 = new Author(matcher.group(2))
-        double estimatedSimilarity = Integer.parseInt(matcher.group(3)) / maximumSimilarityDegree
+        def similarityDegree = Integer.parseInt(matcher.group(3))
 
         def solution1 = solutionRepository.findSolutionFor(task, author1)
         def solution2 = solutionRepository.findSolutionFor(task, author2)
 
-        return new SolutionsPair(solution1, solution2, estimatedSimilarity);
+        return new SolutionsPair(solution1, solution2, SimilarityDegree.valueOf(similarityDegree));
     }
 }

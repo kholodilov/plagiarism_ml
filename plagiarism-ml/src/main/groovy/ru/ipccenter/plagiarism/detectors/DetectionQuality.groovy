@@ -37,4 +37,15 @@ class DetectionQuality implements Comparable<DetectionQuality>
             return "correctly detected"
         }
     }
+
+    boolean equals(other)
+    {
+        if (this.is(other)) return true
+        return quality == ((DetectionQuality) other).quality
+    }
+
+    int hashCode()
+    {
+        return quality
+    }
 }

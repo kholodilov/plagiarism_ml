@@ -10,15 +10,47 @@ import static com.madgag.interval.SimpleInterval.interval
  */
 class SimilarityDegree implements Comparable<SimilarityDegree>
 {
+    static SimilarityDegree UNKNOWN = new SimilarityDegree(-1)
+
+    private static int MAX_DEGREE = 4
+    private static DEGREES = (0..MAX_DEGREE).collect { degree -> new SimilarityDegree(degree) }
+
     private final int degree
-    private final int maxDegree
     Interval<BigDecimal> interval
 
-    protected SimilarityDegree(int degree, int maxDegree)
+    private SimilarityDegree(int degree)
     {
         this.degree = degree
-        this.maxDegree = maxDegree
-        this.interval = interval((degree - 0.5) / maxDegree, (degree + 0.5) / maxDegree)
+        this.interval = interval((degree - 0.5) / MAX_DEGREE, (degree + 0.5) / MAX_DEGREE)
+    }
+
+    static SimilarityDegree valueOf(int degree)
+    {
+        if (degree < 0 || degree > MAX_DEGREE)
+        {
+            throw new SimilarityCalculationException("Similarity degree is out of bounds: $degree")
+        }
+        return DEGREES[degree]
+    }
+
+    static SimilarityDegree valueOf(double similarity)
+    {
+        def degree = DEGREES.find { it.equalTo(similarity) }
+        if (degree == null)
+        {
+            throw new SimilarityCalculationException("Similarity is out of bounds: $similarity")
+        }
+        return degree
+    }
+
+    double getSimilarity()
+    {
+        return degree / MAX_DEGREE
+    }
+
+    boolean isZero()
+    {
+        return degree == 0
     }
 
     int getValue()
@@ -41,9 +73,7 @@ class SimilarityDegree implements Comparable<SimilarityDegree>
     boolean equals(other)
     {
         if (this.is(other)) return true
-        if (getClass() != other.class) return false
-
-        return  degree == ((SimilarityDegree) other).degree
+        return degree == ((SimilarityDegree) other).degree
     }
 
     @Override

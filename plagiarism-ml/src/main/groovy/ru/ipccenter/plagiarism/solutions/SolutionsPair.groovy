@@ -1,6 +1,8 @@
 package ru.ipccenter.plagiarism.solutions
 
-import ru.ipccenter.plagiarism.detectors.DetectionResult;
+import ru.ipccenter.plagiarism.detectors.DetectionResult
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
+import ru.ipccenter.plagiarism.util.Util;
 
 /**
  * @author dmitry
@@ -10,26 +12,31 @@ public class SolutionsPair
 {
     final Solution solution1
     final Solution solution2
+    private final SimilarityDegree similarityDegree
 
-    private final double estimatedSimilarity
     private final Map<String, DetectionResult> detectionResults = [:]
 
     SolutionsPair(Solution solution1, Solution solution2)
     {
         this.solution1 = solution1
         this.solution2 = solution2
-        estimatedSimilarity = -1.0
+        this.similarityDegree = SimilarityDegree.UNKNOWN
     }
 
-    SolutionsPair(Solution solution1, Solution solution2, double estimatedSimilarity)
+    SolutionsPair(Solution solution1, Solution solution2, SimilarityDegree similarityDegree)
     {
         this(solution1, solution2)
-        this.estimatedSimilarity = estimatedSimilarity
+        this.similarityDegree = similarityDegree
+    }
+
+    SimilarityDegree getEstimatedSimilarityDegree()
+    {
+        return similarityDegree
     }
 
     double getEstimatedSimilarity()
     {
-        return estimatedSimilarity
+        return similarityDegree.similarity
     }
 
     def getDetectionResults() {
@@ -43,11 +50,7 @@ public class SolutionsPair
     @Override
     public String toString()
     {
-        return "${solution1.author} ${solution2.author}, est. ${format(estimatedSimilarity)}";
+        return "${solution1.author} ${solution2.author}, est. ${Util.format(estimatedSimilarity)}";
     }
 
-    private static String format(double v)
-    {
-        String.format('%.2f', v)
-    }
 }

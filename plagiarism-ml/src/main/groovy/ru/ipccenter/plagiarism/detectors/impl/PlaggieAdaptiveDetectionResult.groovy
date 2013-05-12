@@ -1,5 +1,9 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
+import ru.ipccenter.plagiarism.detectors.DetectionQuality
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
+import ru.ipccenter.plagiarism.util.Util
+
 /**
  *
  * @author dmitry
@@ -8,6 +12,8 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
 {
     private final double correctedSimilarity
     private final Collection<TokenSequence> falseDuplicateSequences
+
+    private DetectionQuality correctedDetectionQuality
 
     PlaggieAdaptiveDetectionResult(PlaggieDetectionResult plainResult, double correctedSimilarity,
                                    Collection<TokenSequence> falseDuplicateSequences)
@@ -23,6 +29,16 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
         return correctedSimilarity
     }
 
+    DetectionQuality getCorrectedQuality()
+    {
+        if (correctedDetectionQuality == null)
+        {
+            correctedDetectionQuality = new DetectionQuality(
+                    pair.estimatedSimilarityDegree, SimilarityDegree.valueOf(correctedSimilarity))
+        }
+        return correctedDetectionQuality
+    }
+
     boolean isFalseDuplicatesFound()
     {
         return ! falseDuplicateSequences.isEmpty()
@@ -31,5 +47,11 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
     int getFalseDuplicatesCount()
     {
         return falseDuplicateSequences.size()
+    }
+
+    @Override
+    String toString()
+    {
+        return "$pair ($quality[${Util.format(similarity)}] -> $correctedQuality[${Util.format(correctedSimilarity)}])"
     }
 }

@@ -1,16 +1,18 @@
-import org.apache.commons.math3.stat.descriptive.StatisticalSummary
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import org.apache.commons.collections.map.MultiValueMap
 import org.apache.commons.io.FileUtils
-import  org.apache.commons.collections.map.MultiValueMap
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import org.apache.commons.math3.stat.descriptive.StatisticalSummary
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
 import ru.ipccenter.plagiarism.solutions.SolutionsPair
 import ru.ipccenter.plagiarism.solutions.Task
+import ru.ipccenter.plagiarism.solutions.impl.AllSolutionsPairRepository
+import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
+import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
+import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 
-import static com.madgag.interval.SimpleInterval.interval
 import static com.madgag.interval.BeforeOrAfter.AFTER
 import static com.madgag.interval.BeforeOrAfter.BEFORE
-
-import ru.ipccenter.plagiarism.solutions.impl.*
+import static com.madgag.interval.SimpleInterval.interval
 
 final MINIMUM_MATCH_LENGTH = 8
 
@@ -45,7 +47,7 @@ if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 Map<Task, List<SolutionsPair>> task_solution_pairs
 if (MANUAL_CHECKS)
 {
-    final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
+    final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
     task_solution_pairs = repository.loadSolutionsPairs(tasks)
 }
 else

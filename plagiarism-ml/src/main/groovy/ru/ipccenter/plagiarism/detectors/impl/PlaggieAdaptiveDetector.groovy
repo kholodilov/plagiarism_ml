@@ -27,7 +27,7 @@ class PlaggieAdaptiveDetector implements Detector
                 learnedFalseDuplicateSequences[tokenSequence] += 1
             }
         }
-        println "False duplicate sequences: ${learnedFalseDuplicateSequences.values().sum()}," +
+        println "Learned false duplicate sequences: ${learnedFalseDuplicateSequences.values().sum()}," +
                 " unique: ${learnedFalseDuplicateSequences.size()}"
     }
 
