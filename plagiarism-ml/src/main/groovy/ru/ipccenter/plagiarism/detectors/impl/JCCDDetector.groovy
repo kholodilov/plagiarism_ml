@@ -1,13 +1,17 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
+import org.eposoft.jccd.comparators.ast.AcceptFileNames
+import org.eposoft.jccd.comparators.ast.java.AcceptLogicalOperators
+import org.eposoft.jccd.comparators.ast.java.AcceptStringLiterals
+import org.eposoft.jccd.comparators.ast.java.NumberLiteralToDouble
+import org.eposoft.jccd.data.*
 import org.eposoft.jccd.data.ast.ANode
 import org.eposoft.jccd.data.ast.NodeTypes
-import org.eposoft.jccd.detectors.*
-import org.eposoft.jccd.data.*
+import org.eposoft.jccd.detectors.APipeline
+import org.eposoft.jccd.detectors.ASTDetector
+import org.eposoft.jccd.detectors.ASTParseUnit
 import org.eposoft.jccd.parser.StandardParserSelector
 import org.eposoft.jccd.preprocessors.java.*
-import org.eposoft.jccd.comparators.ast.*
-import org.eposoft.jccd.comparators.ast.java.*
 import ru.ipccenter.plagiarism.detectors.DetectionResult
 import ru.ipccenter.plagiarism.detectors.Detector
 import ru.ipccenter.plagiarism.solutions.SolutionsPair
@@ -67,10 +71,9 @@ class JCCDDetector implements Detector
                 }
                 .sum(0)
 
-        DetectionResult detectionResult = new DetectionResult(cloneTokens / totalTokens)
-        detectionResult.report = generateReport(filteredSimilarityGroups, file1, file1Tree, file2, file2Tree)
-
-        return detectionResult
+        def similarity = cloneTokens / totalTokens
+        def report = generateReport(filteredSimilarityGroups, file1, file1Tree, file2, file2Tree)
+        return new DetectionResult(pair, similarity, report)
     }
 
     private String generateReport(

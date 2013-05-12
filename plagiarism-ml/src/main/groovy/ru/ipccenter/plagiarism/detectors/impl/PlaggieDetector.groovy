@@ -44,7 +44,7 @@ class PlaggieDetector implements Detector
         def detectedSimilarity = plaggieResult.similarityA
         def totalTokensCount = plaggieResult.tokensA.size()
 
-        def ourResult = aPlaggieDetectionResult()
+        def ourResult = aPlaggieDetectionResult().forSolutionsPair(pair)
                             .withSimilarity(detectedSimilarity)
                             .withTotalTokensCount(totalTokensCount)
                             .withReport(generateDetectionReport(plaggieResult));

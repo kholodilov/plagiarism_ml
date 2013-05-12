@@ -12,10 +12,10 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
     PlaggieAdaptiveDetectionResult(PlaggieDetectionResult plainResult, double correctedSimilarity,
                                    Collection<TokenSequence> falseDuplicateSequences)
     {
-        super(plainResult.similarity, plainResult.report, plainResult.tokenFrequencies,
-              plainResult.duplicates, plainResult.totalTokensCount)
-        this.falseDuplicateSequences = falseDuplicateSequences
+        super(plainResult.pair, plainResult.similarity, plainResult.report, plainResult.tokenFrequencies,
+                plainResult.duplicates, plainResult.totalTokensCount)
         this.correctedSimilarity = correctedSimilarity
+        this.falseDuplicateSequences = falseDuplicateSequences
     }
 
     double getCorrectedSimilarity()

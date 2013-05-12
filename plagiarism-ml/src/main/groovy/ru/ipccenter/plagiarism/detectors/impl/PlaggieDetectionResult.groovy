@@ -1,6 +1,7 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
 import ru.ipccenter.plagiarism.detectors.DetectionResult
+import ru.ipccenter.plagiarism.solutions.SolutionsPair
 
 /**
  *
@@ -15,13 +16,11 @@ class PlaggieDetectionResult extends DetectionResult
     private final List<Duplicate> duplicates
     private totalTokensCount
 
-    PlaggieDetectionResult(double similarity, String report,
-                           Map<String, Double> tokenFrequencies,
-                           List<Duplicate> duplicates, def totalTokensCount)
+    PlaggieDetectionResult(SolutionsPair pair, double similarity, String report,
+                           Map<String, Double> tokenFrequencies, List<Duplicate> duplicates, Object totalTokensCount)
     {
-        super(similarity)
+        super(pair, similarity, report)
 
-        this.report = report
         this.tokenFrequencies = tokenFrequencies
         this.duplicates = duplicates
         this.totalTokensCount = totalTokensCount

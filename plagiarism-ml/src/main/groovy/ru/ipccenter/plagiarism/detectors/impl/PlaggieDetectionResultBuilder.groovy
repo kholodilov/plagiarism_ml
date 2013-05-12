@@ -1,11 +1,14 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
+import ru.ipccenter.plagiarism.solutions.SolutionsPair
+
 /**
  *
  * @author dmitry
  */
 class PlaggieDetectionResultBuilder
 {
+    private SolutionsPair solutionsPair
     private double similarity
     private String report
     private Map<String, Double> tokenFrequencies
@@ -15,6 +18,12 @@ class PlaggieDetectionResultBuilder
     static PlaggieDetectionResultBuilder aPlaggieDetectionResult()
     {
         return new PlaggieDetectionResultBuilder();
+    }
+
+    PlaggieDetectionResultBuilder forSolutionsPair(SolutionsPair solutionsPair)
+    {
+        this.solutionsPair = solutionsPair
+        return this
     }
 
     PlaggieDetectionResultBuilder withSimilarity(double similarity)
@@ -49,6 +58,7 @@ class PlaggieDetectionResultBuilder
 
     PlaggieDetectionResult build()
     {
-        return new PlaggieDetectionResult(similarity, report, tokenFrequencies, duplicates, totalTokensCount)
+        return new PlaggieDetectionResult(solutionsPair, similarity, report,
+                                          tokenFrequencies, duplicates, totalTokensCount)
     }
 }
