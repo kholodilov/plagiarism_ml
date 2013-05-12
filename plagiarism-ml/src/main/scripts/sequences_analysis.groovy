@@ -1,5 +1,6 @@
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveDetector
+import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode
 import ru.ipccenter.plagiarism.similarity.SimilarityCalculator
 import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
@@ -15,7 +16,7 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath, MAXIMUM_SIMILARITY_DEGREE)
 
-def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH)
+def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH, PlaggieAdaptiveMode.SUBSEQUENCE)
 def similarityCalculator = new SimilarityCalculator(MAXIMUM_SIMILARITY_DEGREE)
 
 taskRepository.findAll().each { task ->

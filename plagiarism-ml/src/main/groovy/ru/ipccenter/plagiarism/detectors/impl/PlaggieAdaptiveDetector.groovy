@@ -11,17 +11,19 @@ class PlaggieAdaptiveDetector implements Detector
 {
     private final learnedFalseDuplicateSequences = new HashMap<TokenSequence, Integer>().withDefault{0}
     private final PlaggieDetector plainDetector
+    private final PlaggieAdaptiveMode adaptiveMode
 
-    PlaggieAdaptiveDetector(int minimumMatchLength)
+    PlaggieAdaptiveDetector(int minimumMatchLength, PlaggieAdaptiveMode adaptiveMode)
     {
         this.plainDetector = new PlaggieDetector(minimumMatchLength)
+        this.adaptiveMode = adaptiveMode
     }
 
     def learnOnPairsWithZeroEstimatedSimilarity(List<SolutionsPair> learningPairs)
     {
         learningPairs.each { pair ->
             def duplicates = plainDetector.performDetection(pair).duplicates
-            duplicates.collect { it.tokens }.each { tokenSequence ->
+            duplicates.collect { it.tokenSequence }.each { tokenSequence ->
                 learnedFalseDuplicateSequences[tokenSequence] += 1
             }
         }
@@ -33,11 +35,25 @@ class PlaggieAdaptiveDetector implements Detector
     PlaggieAdaptiveDetectionResult performDetection(SolutionsPair pair)
     {
         def plainResult = plainDetector.performDetection(pair)
-        def falseDuplicateSequences =
-            learnedFalseDuplicateSequences.keySet().intersect(plainResult.duplicates.collect { it.tokens })
+        List<TokenSequence> falseDuplicateSequences =
+            findFalseDuplicateSequences(plainResult, adaptiveMode.falseDuplicateCondition)
         double correctedSimilarity =
             plainResult.similarity - falseDuplicateSequences.collect { it.size() }.sum(0) / plainResult.totalTokensCount
         return new PlaggieAdaptiveDetectionResult(plainResult, correctedSimilarity, falseDuplicateSequences)
+    }
+
+    private List<TokenSequence> findFalseDuplicateSequences(PlaggieDetectionResult plainResult, Closure falseDuplicateCondition)
+    {
+        def falseDuplicateSequences = []
+        plainResult.duplicates.each { duplicate ->
+            for (learnedSequence in learnedFalseDuplicateSequences.keySet()) {
+                if (falseDuplicateCondition(duplicate, learnedSequence)) {
+                    falseDuplicateSequences.add(duplicate.tokenSequence)
+                    break
+                }
+            }
+        }
+        return falseDuplicateSequences
     }
 
 }

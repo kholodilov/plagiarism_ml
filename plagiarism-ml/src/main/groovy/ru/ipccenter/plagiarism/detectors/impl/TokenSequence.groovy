@@ -13,6 +13,20 @@ class TokenSequence implements Iterable<String>
         this.tokens = tokens
     }
 
+    boolean isSubsequenceOf(TokenSequence otherSequence)
+    {
+        def sizeDelta = otherSequence.tokens.size() - this.tokens.size()
+        for (int shift = 0; shift <= sizeDelta; shift++)
+        {
+            def subsequence = otherSequence.tokens.subList(shift, shift + this.tokens.size())
+            if (this.tokens.equals(subsequence))
+            {
+                return true
+            }
+        }
+        return false
+    }
+
     @Override
     Iterator<String> iterator()
     {

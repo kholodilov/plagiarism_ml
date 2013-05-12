@@ -20,7 +20,7 @@ class Duplicate
         return index
     }
 
-    TokenSequence getTokens()
+    TokenSequence getTokenSequence()
     {
         return tokens
     }
