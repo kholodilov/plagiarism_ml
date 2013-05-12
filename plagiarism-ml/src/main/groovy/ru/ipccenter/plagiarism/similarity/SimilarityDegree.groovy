@@ -21,6 +21,11 @@ class SimilarityDegree implements Comparable<SimilarityDegree>
         this.interval = interval((degree - 0.5) / maxDegree, (degree + 0.5) / maxDegree)
     }
 
+    int getValue()
+    {
+        return degree
+    }
+
     boolean equalTo(double similarity)
     {
         interval.contains(new BigDecimal(similarity))

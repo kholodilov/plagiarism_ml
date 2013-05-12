@@ -1,8 +1,8 @@
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import ru.ipccenter.plagiarism.detectors.DetectionQuality
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveDetector
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode
 import ru.ipccenter.plagiarism.similarity.SimilarityCalculator
-import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
@@ -65,22 +65,11 @@ String estimationQualityAndCorrection(
     def estimatedDegree = similarityCalculator.degreeOf(estimatedSimilarity)
     def detectedDegree = similarityCalculator.degreeOf(detectedSimilarity)
     def correctedDegree = similarityCalculator.degreeOf(correctedSimilarity)
-    return estimationQuality(estimatedDegree, detectedDegree) + "[" + format(detectedSimilarity) + "] -> " +
-           estimationQuality(estimatedDegree, correctedDegree) + "[" + format(correctedSimilarity) + "]"
+    return new DetectionQuality(estimatedDegree, detectedDegree).toString() + "[" + format(detectedSimilarity) + "] -> " +
+           new DetectionQuality(estimatedDegree, correctedDegree).toString() + "[" + format(correctedSimilarity) + "]"
 }
 
 private String format(double v)
 {
     String.format('%.2f', v)
-}
-
-private String estimationQuality(SimilarityDegree estimatedDegree, SimilarityDegree detectedDegree)
-{
-    if (estimatedDegree < detectedDegree) {
-        return "false positive"
-    } else if (estimatedDegree > detectedDegree) {
-        return "false negative"
-    } else {
-        return "correctly detected"
-    }
 }
