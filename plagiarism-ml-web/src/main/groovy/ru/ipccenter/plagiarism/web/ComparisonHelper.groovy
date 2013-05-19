@@ -26,6 +26,7 @@ class ComparisonHelper
         def info = "$solutionsPair.solution1.author $solutionsPair.solution2.author"
 
         return new ComparisonResult(
+                solutionsPair,
                 solutionsPair.solution1.file.text,
                 solutionsPair.solution2.file.text,
                 info)
@@ -39,11 +40,11 @@ class ComparisonHelper
         def detector = new PlaggieDetector(minimumMatchLength)
         def detectionResult = detector.performDetection(solutionsPair)
 
-        def info = "$solutionsPair.solution1.author $solutionsPair.solution2.author // " +
-                   "${String.format('%.2f', detectionResult.similarity)}, " +
+        def info = "${String.format('%.2f', detectionResult.similarity)}, " +
                    "min match $minimumMatchLength"
 
         return new ComparisonResult(
+                solutionsPair,
                 detectionResult.firstSourceWithMatchedLines,
                 detectionResult.secondSourceWithMatchedLines,
                 info)
