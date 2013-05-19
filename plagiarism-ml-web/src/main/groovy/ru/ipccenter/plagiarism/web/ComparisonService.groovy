@@ -3,9 +3,6 @@ package ru.ipccenter.plagiarism.web
 import com.sun.jersey.api.view.Viewable
 
 import javax.ws.rs.*
-import javax.ws.rs.core.Response
-
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST
 
 /**
  * @author dmitry
@@ -55,7 +52,11 @@ class ComparisonService
 
     private static String[] getAuthors(String author1, String author2, String authors_pair)
     {
-        if (authors_pair != null)
+        if (authors_pair == null || authors_pair.isEmpty())
+        {
+            return [author1, author2]
+        }
+        else
         {
             def authors = authors_pair.split(" ")
             if (authors.length == 2)
@@ -64,15 +65,8 @@ class ComparisonService
             }
             else
             {
-                throw new WebApplicationException(
-                        Response.status(BAD_REQUEST)
-                                .entity("Wrong format of 'authors' parameter: " + authors_pair)
-                                .build())
+                return [authors_pair, null]
             }
-        }
-        else
-        {
-            return [author1, author2]
         }
     }
 

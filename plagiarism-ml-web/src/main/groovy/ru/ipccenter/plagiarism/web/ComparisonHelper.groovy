@@ -40,7 +40,8 @@ class ComparisonHelper
         def detector = new PlaggieDetector(minimumMatchLength)
         def detectionResult = detector.performDetection(solutionsPair)
 
-        def info = "${String.format('%.2f', detectionResult.similarity)}, " +
+        def info = "$solutionsPair.solution1.author $solutionsPair.solution2.author // " +
+                   "${String.format('%.2f', detectionResult.similarity)}, " +
                    "min match $minimumMatchLength"
 
         return new ComparisonResult(
