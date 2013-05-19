@@ -22,6 +22,7 @@ taskRepository.findAll().each { task ->
 
     def allPairs = solutionsPairRepository.findFor(task)
     def pairsWithZeroEstimatedSimilarity = allPairs.findAll { it.estimatedSimilarityDegree.isZero() }
+    //Collections.shuffle(pairsWithZeroEstimatedSimilarity)
     def learningPairs = pairsWithZeroEstimatedSimilarity.subList(0, (int) (allPairs.size() / 2) + 1)
     def controlPairs = allPairs - learningPairs
 
@@ -45,11 +46,12 @@ taskRepository.findAll().each { task ->
     println "Original delta: " + getStatistics(originalDeltas)
     println "Corrected delta: " + getStatistics(correctedDeltas)
 
-    println "Improved results: " + improvedResults.size()
+    println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
     improvedResults.each { println "\t$it" }
-    println "Degraded results: " + degradedResults.size()
+    println "Degraded results: " + printSizeAndPercentOfTotal(degradedResults, detectionResults)
     degradedResults.each { println "\t$it" }
-    println "Same results with false duplicates: " + sameResultsWithFalseDuplicates.size()
+    println "Same results with false duplicates: " +
+                                   printSizeAndPercentOfTotal(sameResultsWithFalseDuplicates, detectionResults)
     sameResultsWithFalseDuplicates.each { println "\t$it" }
 }
 
@@ -57,4 +59,11 @@ private String getStatistics(List<Double> deltas)
 {
     def statistics = new DescriptiveStatistics(deltas as double[])
     "${Util.format(statistics.mean)}±${Util.format(statistics.standardDeviation)}"
+}
+
+private String printSizeAndPercentOfTotal(List<?> subList, List<?> baseList)
+{
+    def size = subList.size()
+    double percentOfTotal = subList.size() * 100 / baseList.size()
+    return "${size} (${Util.format(percentOfTotal)}%)"
 }
