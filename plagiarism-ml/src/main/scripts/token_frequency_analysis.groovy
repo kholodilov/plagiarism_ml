@@ -52,7 +52,7 @@ if (MANUAL_CHECKS)
 }
 else
 {
-    final AllSolutionsPairRepository repository = new AllSolutionsPairRepository(solutionRepository, test_data_directory)
+    final AllSolutionsPairRepository repository = new AllSolutionsPairRepository(solutionRepository)
     task_solution_pairs = repository.loadSolutionsPairs(tasks)
 }
 

@@ -9,12 +9,10 @@ import ru.ipccenter.plagiarism.solutions.*
 class AllSolutionsPairRepository implements SolutionsPairRepository
 {
     private final SolutionRepository solutionRepository
-    private final File testDataDirectory
 
-    AllSolutionsPairRepository(SolutionRepository solutionRepository, File testDataDirectory)
+    AllSolutionsPairRepository(SolutionRepository solutionRepository)
     {
         this.solutionRepository = solutionRepository
-        this.testDataDirectory = testDataDirectory
     }
 
     @Override

@@ -1,21 +1,20 @@
 import org.apache.commons.collections.map.MultiValueMap
 import org.apache.commons.io.FileUtils
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import ru.ipccenter.plagiarism.detectors.impl.JCCDDetector
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
 import ru.ipccenter.plagiarism.solutions.Task
-import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
+import ru.ipccenter.plagiarism.solutions.impl.AllSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 
 final TASKS = [
-        new Task("array1", "Array3dImpl.java"),
-        new Task("collections2", "WordCounterImpl.java"),
+        //new Task("array1", "Array3dImpl.java"),
+        //new Task("collections2", "WordCounterImpl.java"),
         new Task("reflection0", "ReflectionsImpl.java")
 ]
 
 final DETECTORS = [
         "plaggie" : new PlaggieDetector(11),
-        "jccd" : new JCCDDetector()
+        //"jccd" : new JCCDDetector()
 ]
 
 def dataDirectoryPath = args[0]
@@ -27,7 +26,7 @@ def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 
 if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 
-final ManualChecksSolutionsPairRepository repository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
+def repository = new AllSolutionsPairRepository(solutionRepository)
 def task_solution_pairs = repository.loadSolutionsPairs(TASKS)
 
 DETECTORS.each { detectorName, detector ->
@@ -45,8 +44,11 @@ DETECTORS.each { detectorName, detector ->
             .withOutputStream { out ->
                 out << detectionResult.report
             }
-            println task.name + " " + pair.solution1.author.name + "_" + pair.solution2.author.name +
-                    " " + detectionResult.similarity
+            if (detectionResult.similarity >= 0.4)
+            {
+                println pair.solution1.author.name + " " + pair.solution2.author.name
+                    //+ " " + detectionResult.similarity
+            }
         }
     }
 }
