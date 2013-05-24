@@ -81,4 +81,10 @@ class SimilarityDegree implements Comparable<SimilarityDegree>
     {
         return degree
     }
+
+    @Override
+    String toString()
+    {
+        return degree
+    }
 }
