@@ -16,43 +16,49 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
 
-def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH, PlaggieAdaptiveMode.SUBSEQUENCE)
+def LEARNING_GROUPS = ["L1", "L2"]
+def CONTROL_GROUPS = ["C_LOW", "C_HIGH", ["C_LOW", "C_HIGH"] as String[]]
 
 taskRepository.findAll().each { task ->
 
-    def allPairs = solutionsPairRepository.findFor(task)
-    def pairsWithZeroEstimatedSimilarity = allPairs.findAll { it.estimatedSimilarityDegree.isZero() }
-    //Collections.shuffle(pairsWithZeroEstimatedSimilarity)
-    def learningPairs = pairsWithZeroEstimatedSimilarity.subList(0, (int) (allPairs.size() / 2) + 1)
-    def controlPairs = allPairs - learningPairs
+    LEARNING_GROUPS.each { learningGroup ->
 
-    println "### $task (learning group: ${learningPairs.size()}, control group: ${controlPairs.size()})"
+        def learningPairs = solutionsPairRepository.findFor(task, learningGroup)
 
-    detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
+        def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH, PlaggieAdaptiveMode.SUBSEQUENCE)
+        detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 
-    def detectionResults = controlPairs.collect { detector.performDetection(it) }
+        CONTROL_GROUPS.each { controlGroup ->
 
-    def improvedResults = detectionResults.findAll { it.correctedQuality > it.quality }
-    def degradedResults = detectionResults.findAll { it.correctedQuality < it.quality }
-    def sameResultsWithFalseDuplicates =
-        detectionResults.findAll { it.falseDuplicatesFound && it.correctedQuality == it.quality }
+            def controlPairs = solutionsPairRepository.findFor(task, controlGroup)
 
-    def originalDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.similarity) }
-    def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
+            println "### $task [learning group: $learningGroup (${learningPairs.size()}), control group: $controlGroup(${controlPairs.size()})]"
 
-    println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
-            " false duplicates for " +  detectionResults.count { it.falseDuplicatesFound } + " pairs"
+            def detectionResults = controlPairs.collect { detector.performDetection(it) }
 
-    println "Original delta: " + getStatistics(originalDeltas)
-    println "Corrected delta: " + getStatistics(correctedDeltas)
+            def improvedResults = detectionResults.findAll { it.correctedQuality > it.quality }
+            def degradedResults = detectionResults.findAll { it.correctedQuality < it.quality }
+            def sameResultsWithFalseDuplicates =
+                detectionResults.findAll { it.falseDuplicatesFound && it.correctedQuality == it.quality }
 
-    println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
-    improvedResults.each { println "\t$it" }
-    println "Degraded results: " + printSizeAndPercentOfTotal(degradedResults, detectionResults)
-    degradedResults.each { println "\t$it" }
-    println "Same results with false duplicates: " +
-                                   printSizeAndPercentOfTotal(sameResultsWithFalseDuplicates, detectionResults)
-    sameResultsWithFalseDuplicates.each { println "\t$it" }
+            def originalDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.similarity) }
+            def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
+
+            println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
+                    " false duplicates for " +  detectionResults.count { it.falseDuplicatesFound } + " pairs"
+
+            println "Original delta: " + getStatistics(originalDeltas)
+            println "Corrected delta: " + getStatistics(correctedDeltas)
+
+            println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
+            improvedResults.each { println "\t$it" }
+            println "Degraded results: " + printSizeAndPercentOfTotal(degradedResults, detectionResults)
+            degradedResults.each { println "\t$it" }
+            println "Same results with false duplicates: " +
+                                           printSizeAndPercentOfTotal(sameResultsWithFalseDuplicates, detectionResults)
+            sameResultsWithFalseDuplicates.each { println "\t$it" }
+        }
+    }
 }
 
 private String getStatistics(List<Double> deltas)

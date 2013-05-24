@@ -13,6 +13,8 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
     private final String dataDirectoryPath
     private final SolutionRepository solutionRepository
 
+    private Map<Task, List<SolutionsPair>> pairs = [:]
+
     ManualChecksSolutionsPairRepository(
             SolutionRepository solutionRepository, String dataDirectoryPath)
     {
@@ -33,42 +35,39 @@ class ManualChecksSolutionsPairRepository implements SolutionsPairRepository
     @Override
     List<SolutionsPair> findFor(Task task)
     {
-        List<SolutionsPair> solutionsPairs = []
-
-        def manual_checks_file = new File(dataDirectoryPath + "/manual_checks", task.name + ".txt")
-        if (manual_checks_file.exists()) {
-            manual_checks_file.eachLine { solutionsPairLine ->
-                if (!solutionsPairLine.startsWith("#")) {
-                    try {
-                        solutionsPairs.add(
-                                loadSolutionsPair(task, solutionsPairLine)
-                        )
-                    } catch (ManualCheckParseException e) {
-                        println e.message
-                    } catch (SolutionNotFoundException e) {
-                        println e.message
-                    }
-                }
-            }
+        if (!pairs.containsKey(task))
+        {
+            def inputFile = new File(dataDirectoryPath + "/manual_checks", task.name + ".txt")
+            def inputLines = inputFile.readLines().findAll { !it.startsWith("#") }
+            def pairsForTask = inputLines.collect { loadSolutionsPair(task, it) }
+            pairs.put(task, pairsForTask)
         }
-        return solutionsPairs
+
+        return pairs.get(task)
     }
 
-    private SolutionsPair loadSolutionsPair(Task task, String solutionsPairLine)
+    @Override
+    List<SolutionsPair> findFor(Task task, String ... groups)
     {
-        def matcher = solutionsPairLine =~ /(\S+) (\S+) (\d+)/
+        return findFor(task).findAll { it.group in groups }
+    }
+
+    private SolutionsPair loadSolutionsPair(Task task, String inputLine)
+    {
+        def matcher = inputLine =~ /(\S+) (\S+) (\d+) (.+)/
         if (!matcher.matches())
         {
-            throw new ManualCheckParseException("Failed to parse manual check line: " + solutionsPairLine);
+            throw new ManualCheckParseException("Failed to parse manual check line: " + inputLine);
         }
 
         def author1 = new Author(matcher.group(1))
         def author2 = new Author(matcher.group(2))
         def similarityDegree = Integer.parseInt(matcher.group(3))
+        def group = matcher.group(4)
 
         def solution1 = solutionRepository.findSolutionFor(task, author1)
         def solution2 = solutionRepository.findSolutionFor(task, author2)
 
-        return new SolutionsPair(solution1, solution2, SimilarityDegree.valueOf(similarityDegree));
+        return new SolutionsPair(solution1, solution2, SimilarityDegree.valueOf(similarityDegree), group);
     }
 }

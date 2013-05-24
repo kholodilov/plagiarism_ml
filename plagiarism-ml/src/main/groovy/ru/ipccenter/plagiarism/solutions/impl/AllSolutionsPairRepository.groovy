@@ -27,6 +27,12 @@ class AllSolutionsPairRepository implements SolutionsPairRepository
         return makeSolutionsPairs(solutionRepository.findAllSolutionsFor(task))
     }
 
+    @Override
+    List<SolutionsPair> findFor(Task task, String ... groups)
+    {
+        throw new RuntimeException("Not implemented")
+    }
+
     Map<Task, List<Solution>> loadAllSolutions(List<Task> tasks)
     {
         Map<Task, List<Solution>> taskSolutions = [:]

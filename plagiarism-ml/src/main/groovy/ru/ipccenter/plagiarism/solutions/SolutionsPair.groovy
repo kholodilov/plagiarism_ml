@@ -15,6 +15,7 @@ public class SolutionsPair
     private final SimilarityDegree similarityDegree
 
     private final Map<String, DetectionResult> detectionResults = [:]
+    private final String group
 
     SolutionsPair(Solution solution1, Solution solution2)
     {
@@ -23,9 +24,10 @@ public class SolutionsPair
         this.similarityDegree = SimilarityDegree.UNKNOWN
     }
 
-    SolutionsPair(Solution solution1, Solution solution2, SimilarityDegree similarityDegree)
+    SolutionsPair(Solution solution1, Solution solution2, SimilarityDegree similarityDegree, String group)
     {
         this(solution1, solution2)
+        this.group = group
         this.similarityDegree = similarityDegree
     }
 
@@ -39,7 +41,13 @@ public class SolutionsPair
         return similarityDegree.similarity
     }
 
-    def getDetectionResults() {
+    String getGroup()
+    {
+        return group
+    }
+
+    def getDetectionResults()
+    {
         return detectionResults
     }
 
