@@ -21,16 +21,21 @@ class DetectionQuality implements Comparable<DetectionQuality>
         return Math.abs(other.quality) - Math.abs(this.quality)
     }
 
+    int getValue()
+    {
+        return quality
+    }
+
     @Override
     String toString()
     {
         if (quality > 0)
         {
-            return "false positive"
+            return "false positive[$value]"
         }
         else if (quality < 0)
         {
-            return "false negative"
+            return "false negative[$value]"
         }
         else
         {

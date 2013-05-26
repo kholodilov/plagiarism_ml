@@ -44,11 +44,23 @@ taskRepository.findAll().each { task ->
             def originalDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.similarity) }
             def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
 
+            Map<Integer, Integer> originalQualityStatistics =
+                detectionResults.collect { it.quality.value }.inject([:].withDefault {0}) {
+                    map, value ->  map[value]++; map }
+            Map<Integer, Integer> correctedQualityStatistics =
+                detectionResults.collect { it.correctedQuality.value }.inject([:].withDefault {0}) {
+                    map, value ->  map[value]++; map }
+            def originalQualitySum = originalQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
+            def correctedQualitySum = correctedQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
+
             println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
                     " false duplicates for " +  detectionResults.count { it.falseDuplicatesFound } + " pairs"
 
             println "Original delta: " + getStatistics(originalDeltas)
             println "Corrected delta: " + getStatistics(correctedDeltas)
+
+            println "Original quality statistics: ${originalQualityStatistics.sort()} (${originalQualitySum})"
+            println "Corrected quality statistics: ${correctedQualityStatistics.sort()} (${correctedQualitySum})"
 
             println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
             improvedResults.each { println "\t$it" }

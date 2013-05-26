@@ -52,6 +52,6 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
     @Override
     String toString()
     {
-        return "$pair ($quality[${Util.format(similarity)}] -> $correctedQuality[${Util.format(correctedSimilarity)}])"
+        return "$pair ($quality(${Util.format(similarity)}) -> $correctedQuality(${Util.format(correctedSimilarity)}))"
     }
 }
