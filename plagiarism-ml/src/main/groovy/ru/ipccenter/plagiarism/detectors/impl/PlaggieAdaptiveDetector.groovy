@@ -38,7 +38,8 @@ class PlaggieAdaptiveDetector implements Detector
         List<TokenSequence> falseDuplicateSequences =
             findFalseDuplicateSequences(plainResult, adaptiveMode.falseDuplicateCondition)
         double correctedSimilarity =
-            plainResult.similarity - falseDuplicateSequences.collect { it.size() }.sum(0) / plainResult.totalTokensCount
+            //plainResult.similarity - falseDuplicateSequences.collect { it.size() }.sum(0) / plainResult.totalTokensCount
+            (plainResult.duplicates.collect { it.tokenSequence } - falseDuplicateSequences).collect { it.size() }.sum(0) / plainResult.totalTokensCount
         return new PlaggieAdaptiveDetectionResult(plainResult, correctedSimilarity, falseDuplicateSequences)
     }
 

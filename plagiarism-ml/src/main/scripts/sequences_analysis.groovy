@@ -16,8 +16,8 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
 
-def LEARNING_GROUPS = ["L1", "L2"]
-def CONTROL_GROUPS = ["C_LOW", "C_HIGH", ["C_LOW", "C_HIGH"] as String[]]
+def LEARNING_GROUPS = ["L1", "L2", ["L1", "L2"] as String[]]
+def CONTROL_GROUPS = ["C_LOW", "C_HIGH"]
 
 taskRepository.findAll().each { task ->
 

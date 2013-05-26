@@ -1,8 +1,10 @@
 package ru.ipccenter.plagiarism.similarity
 
 import com.madgag.interval.Interval
+import com.madgag.interval.IntervalClosure
+import com.madgag.interval.SimpleInterval
 
-import static com.madgag.interval.SimpleInterval.interval
+import static com.madgag.interval.IntervalClosure.CLOSED_OPEN
 
 /**
  *
@@ -11,17 +13,23 @@ import static com.madgag.interval.SimpleInterval.interval
 class SimilarityDegree implements Comparable<SimilarityDegree>
 {
     static SimilarityDegree UNKNOWN = new SimilarityDegree(-1)
+    static int MAX_DEGREE = 4
 
-    private static int MAX_DEGREE = 4
     private static DEGREES = (0..MAX_DEGREE).collect { degree -> new SimilarityDegree(degree) }
 
     private final int degree
-    Interval<BigDecimal> interval
+    private final Interval<BigDecimal> interval
 
     private SimilarityDegree(int degree)
     {
         this.degree = degree
-        this.interval = interval((degree - 0.5) / MAX_DEGREE, (degree + 0.5) / MAX_DEGREE)
+        //this.interval = SimpleInterval.interval((degree - 0.5) / MAX_DEGREE, (degree + 0.5) / MAX_DEGREE)
+
+        this.interval = SimpleInterval.interval(
+                            degree / (MAX_DEGREE + 1),
+                            (degree + 1) / (MAX_DEGREE + 1),
+                            degree == MAX_DEGREE ? IntervalClosure.CLOSED_CLOSED : CLOSED_OPEN)
+
     }
 
     static SimilarityDegree valueOf(int degree)

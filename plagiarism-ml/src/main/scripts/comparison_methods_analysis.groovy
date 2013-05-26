@@ -2,14 +2,15 @@ import org.apache.commons.collections.map.MultiValueMap
 import org.apache.commons.io.FileUtils
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieDetector
+import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.solutions.Task
 import ru.ipccenter.plagiarism.solutions.impl.AllSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 
 final TASKS = [
         //new Task("array1", "Array3dImpl.java"),
-        //new Task("collections2", "WordCounterImpl.java"),
-        new Task("reflection0", "ReflectionsImpl.java")
+        new Task("collections2", "WordCounterImpl.java"),
+        //new Task("reflection0", "ReflectionsImpl.java")
 ]
 
 final DETECTORS = [
@@ -29,6 +30,7 @@ if (results_directory.exists()) FileUtils.cleanDirectory(results_directory)
 def repository = new AllSolutionsPairRepository(solutionRepository)
 def task_solution_pairs = repository.loadSolutionsPairs(TASKS)
 
+def nonZeroResults = []
 DETECTORS.each { detectorName, detector ->
     task_solution_pairs.each { task, solution_pairs ->
         println "Processing ${task} with ${detectorName}"
@@ -39,18 +41,24 @@ DETECTORS.each { detectorName, detector ->
             def detectionResult = detector.performDetection(pair)
             pair.addDetectionResult(detectorName, detectionResult)
 
-            new File(task_results_directory,
-                    "${pair.solution1.author.name}_${pair.solution2.author.name}_${detectorName}.txt")
-            .withOutputStream { out ->
-                out << detectionResult.report
-            }
-            if (detectionResult.similarity >= 0.4)
+//            new File(task_results_directory,
+//                    "${pair.solution1.author.name}_${pair.solution2.author.name}_${detectorName}.txt")
+//            .withOutputStream { out ->
+//                out << detectionResult.report
+//            }
+            if (SimilarityDegree.valueOf(detectionResult.similarity).value > 0)
+            //if (detectionResult.similarity >= 0.2)
             {
-                println pair.solution1.author.name + " " + pair.solution2.author.name
-                    //+ " " + detectionResult.similarity
+                nonZeroResults.add(detectionResult)
+                //println pair.solution1.author.name + " " + pair.solution2.author.name + " " + detectionResult.similarity
             }
         }
     }
+}
+
+nonZeroResults.sort { -it.similarity }.each
+{
+    println it.pair.solution1.author.name + " " + it.pair.solution2.author.name  + " " + it.similarity
 }
 
 task_solution_pairs.each { task, solutionsPairs ->
