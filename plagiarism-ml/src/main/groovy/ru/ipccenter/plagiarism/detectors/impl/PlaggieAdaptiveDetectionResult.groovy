@@ -34,9 +34,14 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
         if (correctedDetectionQuality == null)
         {
             correctedDetectionQuality = new DetectionQuality(
-                    pair.estimatedSimilarityDegree, SimilarityDegree.valueOf(correctedSimilarity))
+                    pair.estimatedSimilarityDegree, correctedSimilarityDegree)
         }
         return correctedDetectionQuality
+    }
+
+    SimilarityDegree getCorrectedSimilarityDegree()
+    {
+        return SimilarityDegree.valueOf(correctedSimilarity)
     }
 
     boolean isFalseDuplicatesFound()

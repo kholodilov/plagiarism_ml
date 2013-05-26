@@ -41,10 +41,14 @@ class DetectionResult
     {
         if (detectionQuality == null)
         {
-            detectionQuality = new DetectionQuality(
-                    pair.estimatedSimilarityDegree, SimilarityDegree.valueOf(similarity))
+            detectionQuality = new DetectionQuality(pair.estimatedSimilarityDegree, similarityDegree)
         }
         return detectionQuality
+    }
+
+    SimilarityDegree getSimilarityDegree()
+    {
+        return SimilarityDegree.valueOf(similarity)
     }
 
     @Override
