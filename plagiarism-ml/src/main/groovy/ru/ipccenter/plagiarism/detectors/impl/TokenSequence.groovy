@@ -6,6 +6,8 @@ package ru.ipccenter.plagiarism.detectors.impl
  */
 class TokenSequence implements Iterable<String>
 {
+    static TokenSequence EMPTY = new TokenSequence([])
+
     private final List<String> tokens
 
     TokenSequence(List<String> tokens)

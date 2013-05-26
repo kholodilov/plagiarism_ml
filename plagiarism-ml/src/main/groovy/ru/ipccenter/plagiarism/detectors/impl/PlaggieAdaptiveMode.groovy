@@ -11,6 +11,12 @@ public enum PlaggieAdaptiveMode
     ),
     SUBSEQUENCE(
         { duplicate, learnedSequence -> duplicate.tokenSequence.isSubsequenceOf(learnedSequence) }
+    ),
+    SUBSEQUENCE_OR_REVERSE_SUBSEQUENCE(
+        { duplicate, learnedSequence ->
+            duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
+            learnedSequence.isSubsequenceOf(duplicate.tokenSequence)
+        }
     );
 
     private final Closure falseDuplicateCondition

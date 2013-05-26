@@ -45,6 +45,11 @@ class PlaggieDetectionResult extends DetectionResult
         return duplicates
     }
 
+    int getDuplicateTokensCount()
+    {
+        duplicates.collect { it.tokenSequence }.collect { it.size() }.sum(0)
+    }
+
     int getTotalTokensCount()
     {
         return totalTokensCount

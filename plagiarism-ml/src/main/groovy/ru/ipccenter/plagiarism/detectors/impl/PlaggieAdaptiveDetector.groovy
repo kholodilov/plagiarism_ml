@@ -37,9 +37,9 @@ class PlaggieAdaptiveDetector implements Detector
         def plainResult = plainDetector.performDetection(pair)
         List<TokenSequence> falseDuplicateSequences =
             findFalseDuplicateSequences(plainResult, adaptiveMode.falseDuplicateCondition)
+
         double correctedSimilarity =
-            //plainResult.similarity - falseDuplicateSequences.collect { it.size() }.sum(0) / plainResult.totalTokensCount
-            (plainResult.duplicates.collect { it.tokenSequence } - falseDuplicateSequences).collect { it.size() }.sum(0) / plainResult.totalTokensCount
+            (plainResult.duplicateTokensCount - falseDuplicateSequences.collect { it.size() }.sum(0)) / plainResult.totalTokensCount
         return new PlaggieAdaptiveDetectionResult(plainResult, correctedSimilarity, falseDuplicateSequences)
     }
 
@@ -47,11 +47,25 @@ class PlaggieAdaptiveDetector implements Detector
     {
         def falseDuplicateSequences = []
         plainResult.duplicates.each { duplicate ->
-            for (learnedSequence in learnedFalseDuplicateSequences.keySet()) {
-                if (falseDuplicateCondition(duplicate, learnedSequence)) {
-                    falseDuplicateSequences.add(duplicate.tokenSequence)
-                    break
+            def bestDuplicateSequence = TokenSequence.EMPTY
+            for (learnedSequence in learnedFalseDuplicateSequences.keySet())
+            {
+                if (falseDuplicateCondition(duplicate, learnedSequence) && learnedSequence.size() > bestDuplicateSequence.size())
+                {
+                    if (duplicate.tokenSequence.size() <= learnedSequence.size())
+                    {
+                        bestDuplicateSequence = duplicate.tokenSequence
+                        break
+                    }
+                    else
+                    {
+                        bestDuplicateSequence = learnedSequence
+                    }
                 }
+            }
+            if (bestDuplicateSequence != TokenSequence.EMPTY)
+            {
+                falseDuplicateSequences.add(bestDuplicateSequence)
             }
         }
         return falseDuplicateSequences
