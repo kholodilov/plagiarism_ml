@@ -4,20 +4,33 @@ package ru.ipccenter.plagiarism.detectors.impl
  *
  * @author dmitry
  */
-public enum PlaggieAdaptiveMode
+public class PlaggieAdaptiveMode
 {
-    EXACT(
-        { duplicate, learnedSequence -> duplicate.tokenSequence == learnedSequence}
-    ),
-    SUBSEQUENCE(
-        { duplicate, learnedSequence -> duplicate.tokenSequence.isSubsequenceOf(learnedSequence) }
-    ),
-    SUBSEQUENCE_OR_REVERSE_SUBSEQUENCE(
-        { duplicate, learnedSequence ->
-            duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
-            learnedSequence.isSubsequenceOf(duplicate.tokenSequence)
-        }
-    );
+    static PlaggieAdaptiveMode EXACT =
+        new PlaggieAdaptiveMode({ duplicate, learnedSequence -> duplicate.tokenSequence == learnedSequence })
+
+    static PlaggieAdaptiveMode SUBSEQUENCE =
+        new PlaggieAdaptiveMode(
+                { duplicate, learnedSequence -> duplicate.tokenSequence.isSubsequenceOf(learnedSequence) })
+
+    static PlaggieAdaptiveMode SUBSEQUENCE_OR_REVERSE_SUBSEQUENCE =
+        new PlaggieAdaptiveMode(
+            { duplicate, learnedSequence ->
+                duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
+                learnedSequence.isSubsequenceOf(duplicate.tokenSequence)
+            })
+
+    static PlaggieAdaptiveMode subsequenceOrReverseSubsequence(int maxReverseDeltaSize)
+    {
+        new PlaggieAdaptiveMode(
+                { duplicate, learnedSequence ->
+                    duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
+                    (
+                        duplicate.tokenSequence.size() - learnedSequence.size() <= maxReverseDeltaSize &&
+                        learnedSequence.isSubsequenceOf(duplicate.tokenSequence)
+                    )
+                })
+    }
 
     private final Closure falseDuplicateCondition
 

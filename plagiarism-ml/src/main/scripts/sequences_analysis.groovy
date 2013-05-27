@@ -25,7 +25,7 @@ taskRepository.findAll().each { task ->
 
         def learningPairs = solutionsPairRepository.findFor(task, learningGroup)
 
-        def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH, PlaggieAdaptiveMode.SUBSEQUENCE_OR_REVERSE_SUBSEQUENCE)
+        def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH, PlaggieAdaptiveMode.subsequenceOrReverseSubsequence(2))
         detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 
         CONTROL_GROUPS.each { controlGroup ->
