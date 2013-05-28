@@ -32,7 +32,7 @@ public class PlaggieAdaptiveMode
                 })
     }
 
-    static PlaggieAdaptiveMode subsequenceOrFuzzyReverseSubsequence(int maxDifferentTokens)
+    static PlaggieAdaptiveMode subsequenceOrFuzzyReverseSubsequence(int maxDifferentTokens, int maxSizeDelta = maxDifferentTokens)
     {
         new PlaggieAdaptiveMode(
                 { duplicate, learnedSequence ->

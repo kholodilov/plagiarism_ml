@@ -94,6 +94,9 @@ public class TokenSequenceTest
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2), is(true))
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 1), is(false))
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 0), is(false))
+
+        assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2, 2), is(true))
+        assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2, 1), is(false))
     }
 
     @Test
@@ -110,6 +113,9 @@ public class TokenSequenceTest
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2), is(true))
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 1), is(false))
         assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 0), is(false))
+
+        assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2, 2), is(true))
+        assertThat(subsequence2.isFuzzySubsequenceOf(sequence, 2, 1), is(false))
     }
 
     @Test

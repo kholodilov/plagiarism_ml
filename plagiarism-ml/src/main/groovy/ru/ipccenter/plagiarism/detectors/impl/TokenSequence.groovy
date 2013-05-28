@@ -29,10 +29,10 @@ class TokenSequence implements Iterable<String>
         return false
     }
 
-    boolean isFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens)
+    boolean isFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens, int maxSizeDelta)
     {
         def sizeDelta = otherSequence.size() - this.size()
-        if (sizeDelta < 0 || sizeDelta > maxDifferentTokens)
+        if (sizeDelta < 0 || sizeDelta > maxSizeDelta)
         {
             return false
         }
@@ -47,6 +47,11 @@ class TokenSequence implements Iterable<String>
             }
         }
         return false
+    }
+
+    boolean isFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens)
+    {
+        isFuzzySubsequenceOf(otherSequence, maxDifferentTokens, maxDifferentTokens)
     }
 
     protected static int getDifferentTokensCount(List sequence1, List sequence2)
