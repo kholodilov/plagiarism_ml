@@ -8,7 +8,7 @@ import ru.ipccenter.plagiarism.util.Util
 
 import static java.lang.Math.abs
 
-final int MINIMUM_MATCH_LENGTH = 8
+final int MINIMUM_MATCH_LENGTH = 11
 
 def dataDirectoryPath = args[0]
 
@@ -26,7 +26,7 @@ taskRepository.findAll().each { task ->
         def learningPairs = solutionsPairRepository.findFor(task, learningGroup)
 
         def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH,
-                        PlaggieAdaptiveMode.subsequenceOrFuzzyReverseSubsequence(4, 3))
+                        PlaggieAdaptiveMode.fuzzySubsequenceOrReverseSubsequence(4, 3))
 
         detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 

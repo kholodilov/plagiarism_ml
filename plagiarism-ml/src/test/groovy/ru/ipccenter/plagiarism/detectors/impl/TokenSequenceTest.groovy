@@ -167,6 +167,19 @@ public class TokenSequenceTest
         assertThat(subsequence.isFuzzySubsequenceOf(sequence, 0), is(false))
     }
 
+    @Test
+    public void detectsFuzzySubsequenceWithoutSizeLimit()
+    {
+        def sequence = new TokenSequence(["a", "b", "c", "d", "e"])
+        def subsequence1 = new TokenSequence(["x", "c", "x"])
+        def subsequence2 = new TokenSequence(["b", "c", "d"])
+
+        assertThat(subsequence1.isFuzzySubsequenceWithoutSizeLimitOf(sequence, 2), is(true))
+        assertThat(subsequence1.isFuzzySubsequenceWithoutSizeLimitOf(sequence, 1), is(false))
+
+        assertThat(subsequence2.isFuzzySubsequenceWithoutSizeLimitOf(sequence, 0), is(true))
+    }
+
     // utility
 
     @Test

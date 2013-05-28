@@ -37,7 +37,16 @@ public class PlaggieAdaptiveMode
         new PlaggieAdaptiveMode(
                 { duplicate, learnedSequence ->
                     duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
-                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens)
+                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens, maxSizeDelta)
+                })
+    }
+
+    static PlaggieAdaptiveMode fuzzySubsequenceOrReverseSubsequence(int maxDifferentTokens, int maxSizeDelta = maxDifferentTokens)
+    {
+        new PlaggieAdaptiveMode(
+                { duplicate, learnedSequence ->
+                    duplicate.tokenSequence.isFuzzySubsequenceWithoutSizeLimitOf(learnedSequence, maxDifferentTokens) ||
+                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens, maxSizeDelta)
                 })
     }
 
