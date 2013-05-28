@@ -32,6 +32,15 @@ public class PlaggieAdaptiveMode
                 })
     }
 
+    static PlaggieAdaptiveMode subsequenceOrFuzzyReverseSubsequence(int maxDifferentTokens)
+    {
+        new PlaggieAdaptiveMode(
+                { duplicate, learnedSequence ->
+                    duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
+                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens)
+                })
+    }
+
     private final Closure falseDuplicateCondition
 
     PlaggieAdaptiveMode(Closure falseDuplicateCondition)

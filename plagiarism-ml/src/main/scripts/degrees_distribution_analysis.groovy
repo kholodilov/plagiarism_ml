@@ -36,7 +36,7 @@ taskRepository.findAll().each { task ->
 
             def learningPairs = learningSolutionsPairRepository.findFor(task, learningGroup)
 
-            def detector = new PlaggieAdaptiveDetector(minMatchLength, PlaggieAdaptiveMode.SUBSEQUENCE)
+            def detector = new PlaggieAdaptiveDetector(minMatchLength, PlaggieAdaptiveMode.subsequenceOrReverseSubsequence(3))
             detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 
             def correctedDegreesDistribution =
