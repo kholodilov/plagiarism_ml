@@ -1,16 +1,19 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
+import org.apache.commons.lang3.StringUtils
+
+
 /**
  *
  * @author dmitry
  */
-class TokenSequence implements Iterable<String>
+class TokenSequence implements CharSequence
 {
-    static TokenSequence EMPTY = new TokenSequence([])
+    static TokenSequence EMPTY = new TokenSequence(new int[0])
 
-    private final List<String> tokens
+    private final int[] tokens
 
-    TokenSequence(List<String> tokens)
+    TokenSequence(int[] tokens)
     {
         this.tokens = tokens
     }
@@ -20,7 +23,7 @@ class TokenSequence implements Iterable<String>
         def sizeDelta = otherSequence.tokens.size() - this.tokens.size()
         for (int shift = 0; shift <= sizeDelta; shift++)
         {
-            def subsequence = otherSequence.tokens.subList(shift, shift + this.tokens.size())
+            int[] subsequence = otherSequence.tokens[shift..shift + this.tokens.size() - 1]
             if (this.tokens.equals(subsequence))
             {
                 return true
@@ -29,7 +32,7 @@ class TokenSequence implements Iterable<String>
         return false
     }
 
-    boolean isFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens, int maxSizeDelta)
+    boolean isDiffOnlyFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens, int maxSizeDelta)
     {
         def sizeDelta = otherSequence.size() - this.size()
         if (sizeDelta < 0 || sizeDelta > maxSizeDelta)
@@ -39,7 +42,7 @@ class TokenSequence implements Iterable<String>
 
         for (int shift = 0; shift <= sizeDelta; shift++)
         {
-            def subsequence = otherSequence.tokens.subList(shift, shift + this.tokens.size())
+            int[] subsequence = otherSequence.tokens[shift..shift + this.tokens.size() - 1]
             int differentTokensCount = getDifferentTokensCount(this.tokens, subsequence)
             if (differentTokensCount + sizeDelta <= maxDifferentTokens)
             {
@@ -49,12 +52,12 @@ class TokenSequence implements Iterable<String>
         return false
     }
 
-    boolean isFuzzySubsequenceWithoutSizeLimitOf(TokenSequence otherSequence, int maxDifferentTokens)
+    boolean isDiffOnlyFuzzySubsequenceWithoutSizeLimitOf(TokenSequence otherSequence, int maxDifferentTokens)
     {
         def sizeDelta = otherSequence.size() - this.size()
         for (int shift = 0; shift <= sizeDelta; shift++)
         {
-            def subsequence = otherSequence.tokens.subList(shift, shift + this.tokens.size())
+            int[] subsequence = otherSequence.tokens[shift..shift + this.tokens.size() - 1]
             int differentTokensCount = getDifferentTokensCount(this.tokens, subsequence)
             if (differentTokensCount <= maxDifferentTokens)
             {
@@ -64,20 +67,55 @@ class TokenSequence implements Iterable<String>
         return false
     }
 
-    boolean isFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens)
+    boolean isDiffOnlyFuzzySubsequenceOf(TokenSequence otherSequence, int maxDifferentTokens)
     {
-        isFuzzySubsequenceOf(otherSequence, maxDifferentTokens, maxDifferentTokens)
+        isDiffOnlyFuzzySubsequenceOf(otherSequence, maxDifferentTokens, maxDifferentTokens)
     }
 
-    protected static int getDifferentTokensCount(List sequence1, List sequence2)
+    boolean isLevenshteinDistanceNotGreaterThan(TokenSequence otherSequence, int maxLevenshteinDistance)
+    {
+        StringUtils.getLevenshteinDistance(this, otherSequence, maxLevenshteinDistance) >= 0
+    }
+
+/*
+    boolean isSubsequenceWithHolesOf(TokenSequence otherSequence, int maxHolesCount, int maxSizeDelta)
+    {
+        def sizeDelta = otherSequence.size() - this.size()
+        if (sizeDelta < 0 || sizeDelta > maxSizeDelta)
+        {
+            return false
+        }
+
+        for (int shift = 0; shift < sizeDelta; shift++)
+        {
+            int otherSequencePos = shift
+            int thisPos = 0
+            while (this.tokens[thisPos] == otherSequence.tokens[otherSequencePos])
+            {
+                otherSequencePos++
+                thisPos++
+                if (thisPos == this.size())
+                {
+                    return true
+                }
+            }
+            int diffTokensCount = 0
+            while (diffTokensCount <= maxHolesCount - sizeDelta)
+            {
+
+                if ()
+                {
+
+                }
+            }
+        }
+        return false
+    }
+*/
+
+    protected static int getDifferentTokensCount(int[] sequence1, int[] sequence2)
     {
         return [sequence1, sequence2].transpose().count { it[0] != it[1] }
-    }
-
-    @Override
-    Iterator<String> iterator()
-    {
-        return tokens.iterator()
     }
 
     int size()
@@ -86,10 +124,18 @@ class TokenSequence implements Iterable<String>
     }
 
     @Override
+    int length()
+    {
+        return tokens.size()
+    }
+
+/*
+    @Override
     String toString()
     {
         return "[" + tokens.join(", ") + "]";
     }
+*/
 
     @Override
     boolean equals(other)
@@ -106,5 +152,18 @@ class TokenSequence implements Iterable<String>
     int hashCode()
     {
         return tokens.hashCode()
+    }
+
+    @Override
+    char charAt(int index)
+    {
+        return tokens[index]
+    }
+
+    @Override
+    CharSequence subSequence(int start, int end)
+    {
+        int[] subsequence = tokens[start..end - 1]
+        return new TokenSequence(subsequence)
     }
 }

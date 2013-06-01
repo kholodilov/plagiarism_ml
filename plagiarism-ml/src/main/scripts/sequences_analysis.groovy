@@ -1,14 +1,12 @@
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveDetector
-import ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode
 import ru.ipccenter.plagiarism.solutions.impl.ManualChecksSolutionsPairRepository
 import ru.ipccenter.plagiarism.solutions.impl.SolutionRepositoryFSImpl
 import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 import ru.ipccenter.plagiarism.util.Util
 
 import static java.lang.Math.abs
-
-final int MINIMUM_MATCH_LENGTH = 11
+import static ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode.*
 
 def dataDirectoryPath = args[0]
 
@@ -16,61 +14,88 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
 
-def LEARNING_GROUPS = ["L1", "L2", ["L1", "L2"] as String[]]
+def TASK = "collections2"
+def LEARNING_GROUPS = ["L1", "L2"]
 def CONTROL_GROUPS = ["C_LOW", "C_HIGH"]
+def ADAPTIVE_MODES = [
+        ["Subsequence", SUBSEQUENCE],
+        ["Reverse subsequence (size2)", subsequenceOrReverseSubsequence(2)],
+        ["Reverse subsequence (size3)", subsequenceOrReverseSubsequence(3)],
+        ["Fuzzy (diff4, size3)", diffOnlyFuzzySubsequenceOrReverseSubsequence(4, 3)],
+        ["Fuzzy (diff3, size2)", diffOnlyFuzzySubsequenceOrReverseSubsequence(3, 2)],
+        ["Fuzzy (levenshtein4)", fuzzySubsequenceOrReverseSubsequence(4)],
+        ["Fuzzy (levenshtein5)", fuzzySubsequenceOrReverseSubsequence(5)],
+]
 
-taskRepository.findAll().each { task ->
+[taskRepository.find(TASK)].each { task ->
 
-    LEARNING_GROUPS.each { learningGroup ->
+    println "### $task\n"
 
-        def learningPairs = solutionsPairRepository.findFor(task, learningGroup)
+    (8..11).each { minMatchLength ->
 
-        def detector = new PlaggieAdaptiveDetector(MINIMUM_MATCH_LENGTH,
-                        PlaggieAdaptiveMode.fuzzySubsequenceOrReverseSubsequence(4, 3))
+        println "### MINIMUM_MATCH_LENGTH=$minMatchLength\n"
 
-        detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
+        ADAPTIVE_MODES.each { adaptiveModeName, adaptiveMode ->
 
-        CONTROL_GROUPS.each { controlGroup ->
+            LEARNING_GROUPS.each { learningGroup ->
 
-            def controlPairs = solutionsPairRepository.findFor(task, controlGroup)
+                def learningPairs = solutionsPairRepository.findFor(task, learningGroup)
+                def detector = new PlaggieAdaptiveDetector(minMatchLength, adaptiveMode)
+                detector.learnOnPairsWithZeroEstimatedSimilarity(learningPairs)
 
-            println "### $task [learning group: $learningGroup (${learningPairs.size()}), control group: $controlGroup(${controlPairs.size()})]"
+                CONTROL_GROUPS.each { controlGroup ->
 
-            def detectionResults = controlPairs.collect { detector.performDetection(it) }
+                    println "$adaptiveModeName, $learningGroup, $controlGroup"
 
-            def improvedResults = detectionResults.findAll { it.correctedQuality > it.quality }
-            def degradedResults = detectionResults.findAll { it.correctedQuality < it.quality }
-            def sameResultsWithFalseDuplicates =
-                detectionResults.findAll { it.falseDuplicatesFound && it.correctedQuality == it.quality }
+                    def controlPairs = solutionsPairRepository.findFor(task, controlGroup)
+                    def detectionResults = controlPairs.collect { detector.performDetection(it) }
 
-            def originalDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.similarity) }
-            def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
+/*
+                    def improvedResults = detectionResults.findAll { it.correctedQuality > it.quality }
+                    def degradedResults = detectionResults.findAll { it.correctedQuality < it.quality }
+                    def sameResultsWithFalseDuplicates =
+                        detectionResults.findAll { it.falseDuplicatesFound && it.correctedQuality == it.quality }
+*/
 
-            Map<Integer, Integer> originalQualityStatistics =
-                detectionResults.collect { it.quality.value }.inject([:].withDefault {0}) {
-                    map, value ->  map[value]++; map }
-            Map<Integer, Integer> correctedQualityStatistics =
-                detectionResults.collect { it.correctedQuality.value }.inject([:].withDefault {0}) {
-                    map, value ->  map[value]++; map }
-            def originalQualitySum = originalQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
-            def correctedQualitySum = correctedQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
+/*
+                    def originalDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.similarity) }
+                    def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
+*/
 
-            println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
-                    " false duplicates for " +  detectionResults.count { it.falseDuplicatesFound } + " pairs"
+                    Map<Integer, Integer> originalQualityStatistics =
+                        detectionResults.collect { it.quality.value }.inject([:].withDefault {0}) {
+                            map, value ->  map[value]++; map }
+                    Map<Integer, Integer> correctedQualityStatistics =
+                        detectionResults.collect { it.correctedQuality.value }.inject([:].withDefault {0}) {
+                            map, value ->  map[value]++; map }
+                    def originalQualitySum = originalQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
+                    def correctedQualitySum = correctedQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
 
-            println "Original delta: " + getStatistics(originalDeltas)
-            println "Corrected delta: " + getStatistics(correctedDeltas)
+/*
+                    println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
+                            " false duplicates for " +  detectionResults.count { it.falseDuplicatesFound } + " pairs"
+*/
 
-            println "Original quality statistics: ${originalQualityStatistics.sort()} (${originalQualitySum})"
-            println "Corrected quality statistics: ${correctedQualityStatistics.sort()} (${correctedQualitySum})"
+/*
+                    println "Original delta: " + getStatistics(originalDeltas)
+                    println "Corrected delta: " + getStatistics(correctedDeltas)
+*/
 
-            println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
-            improvedResults.each { println "\t$it" }
-            println "Degraded results: " + printSizeAndPercentOfTotal(degradedResults, detectionResults)
-            degradedResults.each { println "\t$it" }
-            println "Same results with false duplicates: " +
-                                           printSizeAndPercentOfTotal(sameResultsWithFalseDuplicates, detectionResults)
-            sameResultsWithFalseDuplicates.each { println "\t$it" }
+                    println "\tOriginal quality statistics: ${originalQualityStatistics.sort()} (${originalQualitySum})"
+                    println "\tCorrected quality statistics: ${correctedQualityStatistics.sort()} (${correctedQualitySum})"
+                    println ""
+
+/*
+                    println "Improved results: " + printSizeAndPercentOfTotal(improvedResults, detectionResults)
+                    improvedResults.each { println "\t$it" }
+                    println "Degraded results: " + printSizeAndPercentOfTotal(degradedResults, detectionResults)
+                    degradedResults.each { println "\t$it" }
+                    println "Same results with false duplicates: " +
+                                                   printSizeAndPercentOfTotal(sameResultsWithFalseDuplicates, detectionResults)
+                    sameResultsWithFalseDuplicates.each { println "\t$it" }
+*/
+                }
+            }
         }
     }
 }

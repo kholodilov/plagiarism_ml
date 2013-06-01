@@ -52,9 +52,9 @@ class PlaggieDetector implements Detector
         def tokenFrequenciesCalculator = new TokenFrequenciesCalculator(totalTokensCount)
 
         plaggieResult.matches.each { MatchedTile matchedTile ->
-            def tokensInMatch = getTokens(matchedTile)
-            tokenFrequenciesCalculator.addTokens(tokensInMatch)
-            ourResult.withDuplicate(new Duplicate(matchedTile.id, new TokenSequence(tokensInMatch)))
+            int[] tokenCodes = getTokenCodes(matchedTile)
+            tokenFrequenciesCalculator.addTokens(getTokens(tokenCodes))
+            ourResult.withDuplicate(new Duplicate(matchedTile.id, new TokenSequence(tokenCodes)))
         }
 
         return ourResult
@@ -62,12 +62,17 @@ class PlaggieDetector implements Detector
                 .build()
     }
 
-    private List<String> getTokens(MatchedTile tile)
+    private static int[] getTokenCodes(MatchedTile tile)
     {
         int[] tokenCodes = tile.getTileA().getTokenList().getValueArray()
         def startIndex = tile.getTileA().getStartTokenIndex()
         def endIndex = tile.getTileA().getEndTokenIndex()
-        return tokenCodes[startIndex..endIndex].collect { tokenizer.getValueString(it) }
+        return tokenCodes[startIndex..endIndex]
+    }
+
+    private List<String> getTokens(int[] tokenCodes)
+    {
+        return tokenCodes.collect { tokenizer.getValueString(it) }
     }
 
     private generateDetectionReport(fileDetectionResult)

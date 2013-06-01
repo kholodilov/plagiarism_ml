@@ -32,21 +32,21 @@ public class PlaggieAdaptiveMode
                 })
     }
 
-    static PlaggieAdaptiveMode subsequenceOrFuzzyReverseSubsequence(int maxDifferentTokens, int maxSizeDelta = maxDifferentTokens)
+    static PlaggieAdaptiveMode diffOnlyFuzzySubsequenceOrReverseSubsequence(int maxDifferentTokens, int maxSizeDelta = maxDifferentTokens)
+    {
+        new PlaggieAdaptiveMode(
+                { duplicate, learnedSequence ->
+                    duplicate.tokenSequence.isDiffOnlyFuzzySubsequenceWithoutSizeLimitOf(learnedSequence, maxDifferentTokens) ||
+                    learnedSequence.isDiffOnlyFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens, maxSizeDelta)
+                })
+    }
+
+    static PlaggieAdaptiveMode fuzzySubsequenceOrReverseSubsequence(int maxLevenshteinDistance)
     {
         new PlaggieAdaptiveMode(
                 { duplicate, learnedSequence ->
                     duplicate.tokenSequence.isSubsequenceOf(learnedSequence) ||
-                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens, maxSizeDelta)
-                })
-    }
-
-    static PlaggieAdaptiveMode fuzzySubsequenceOrReverseSubsequence(int maxDifferentTokens, int maxSizeDelta = maxDifferentTokens)
-    {
-        new PlaggieAdaptiveMode(
-                { duplicate, learnedSequence ->
-                    duplicate.tokenSequence.isFuzzySubsequenceWithoutSizeLimitOf(learnedSequence, maxDifferentTokens) ||
-                    learnedSequence.isFuzzySubsequenceOf(duplicate.tokenSequence, maxDifferentTokens, maxSizeDelta)
+                    learnedSequence.isLevenshteinDistanceNotGreaterThan(duplicate.tokenSequence, maxLevenshteinDistance)
                 })
     }
 
