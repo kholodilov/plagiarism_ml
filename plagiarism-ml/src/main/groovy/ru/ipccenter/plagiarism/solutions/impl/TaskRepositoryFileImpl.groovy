@@ -29,6 +29,13 @@ class TaskRepositoryFileImpl implements TaskRepository
     }
 
     @Override
+    List<Task> find(List<String> names)
+    {
+        def tasks = findAll().findAll { it.name in names }
+        return tasks
+    }
+
+    @Override
     List<Task> findAll()
     {
         def tasks = []

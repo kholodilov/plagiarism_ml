@@ -6,7 +6,7 @@ import ru.ipccenter.plagiarism.solutions.impl.TaskRepositoryFileImpl
 import ru.ipccenter.plagiarism.util.Util
 
 import static java.lang.Math.abs
-import static ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode.*
+import static ru.ipccenter.plagiarism.detectors.impl.PlaggieAdaptiveMode.fuzzySubsequenceOrReverseSubsequence
 
 def dataDirectoryPath = args[0]
 
@@ -14,20 +14,23 @@ def taskRepository = new TaskRepositoryFileImpl(dataDirectoryPath)
 def solutionRepository = new SolutionRepositoryFSImpl(dataDirectoryPath)
 def solutionsPairRepository = new ManualChecksSolutionsPairRepository(solutionRepository, dataDirectoryPath)
 
-def TASK = "collections2"
+def TASKS = ["array1", "collections2", "reflection0"]
 def LEARNING_GROUPS = ["L1", "L2"]
 def CONTROL_GROUPS = ["C_LOW", "C_HIGH"]
 def ADAPTIVE_MODES = [
+/*
         ["Subsequence", SUBSEQUENCE],
         ["Reverse subsequence (size2)", subsequenceOrReverseSubsequence(2)],
         ["Reverse subsequence (size3)", subsequenceOrReverseSubsequence(3)],
         ["Fuzzy (diff4, size3)", diffOnlyFuzzySubsequenceOrReverseSubsequence(4, 3)],
         ["Fuzzy (diff3, size2)", diffOnlyFuzzySubsequenceOrReverseSubsequence(3, 2)],
+*/
+        ["Fuzzy (levenshtein3)", fuzzySubsequenceOrReverseSubsequence(3)],
         ["Fuzzy (levenshtein4)", fuzzySubsequenceOrReverseSubsequence(4)],
         ["Fuzzy (levenshtein5)", fuzzySubsequenceOrReverseSubsequence(5)],
 ]
 
-[taskRepository.find(TASK)].each { task ->
+taskRepository.find(TASKS).each { task ->
 
     println "### $task\n"
 

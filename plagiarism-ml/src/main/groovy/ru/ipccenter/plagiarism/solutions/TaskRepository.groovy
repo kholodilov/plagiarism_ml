@@ -7,5 +7,6 @@ package ru.ipccenter.plagiarism.solutions
 public interface TaskRepository
 {
     Task find(String name)
+    List<Task> find(List<String> names)
     List<Task> findAll()
 }
