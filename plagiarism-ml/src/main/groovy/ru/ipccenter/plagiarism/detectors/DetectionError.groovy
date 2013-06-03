@@ -6,34 +6,34 @@ import ru.ipccenter.plagiarism.similarity.SimilarityDegree
  *
  * @author dmitry
  */
-class DetectionQuality implements Comparable<DetectionQuality>
+class DetectionError implements Comparable<DetectionError>
 {
-    private final int quality
+    private final int value
 
-    DetectionQuality(SimilarityDegree estimatedDegree, SimilarityDegree detectedDegree)
+    DetectionError(SimilarityDegree estimatedDegree, SimilarityDegree detectedDegree)
     {
-        quality = detectedDegree.value - estimatedDegree.value
+        value = detectedDegree.value - estimatedDegree.value
     }
 
     @Override
-    int compareTo(DetectionQuality other)
+    int compareTo(DetectionError other)
     {
-        return Math.abs(other.quality) - Math.abs(this.quality)
+        return Math.abs(other.value) - Math.abs(this.value)
     }
 
     int getValue()
     {
-        return quality
+        return value
     }
 
     @Override
     String toString()
     {
-        if (quality > 0)
+        if (value > 0)
         {
             return "false positive[$value]"
         }
-        else if (quality < 0)
+        else if (value < 0)
         {
             return "false negative[$value]"
         }
@@ -46,11 +46,11 @@ class DetectionQuality implements Comparable<DetectionQuality>
     boolean equals(other)
     {
         if (this.is(other)) return true
-        return quality == ((DetectionQuality) other).quality
+        return value == ((DetectionError) other).value
     }
 
     int hashCode()
     {
-        return quality
+        return value
     }
 }

@@ -13,7 +13,7 @@ class DetectionResult
     private final double similarity
     private final String report
 
-    private DetectionQuality detectionQuality
+    private DetectionError detectionError
 
     DetectionResult(SolutionsPair pair, double similarity, String report)
     {
@@ -37,13 +37,13 @@ class DetectionResult
         return report
     }
 
-    DetectionQuality getQuality()
+    DetectionError getError()
     {
-        if (detectionQuality == null)
+        if (detectionError == null)
         {
-            detectionQuality = new DetectionQuality(pair.estimatedSimilarityDegree, similarityDegree)
+            detectionError = new DetectionError(pair.estimatedSimilarityDegree, similarityDegree)
         }
-        return detectionQuality
+        return detectionError
     }
 
     SimilarityDegree getSimilarityDegree()

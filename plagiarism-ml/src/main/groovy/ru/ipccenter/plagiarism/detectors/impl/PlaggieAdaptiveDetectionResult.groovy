@@ -1,6 +1,6 @@
 package ru.ipccenter.plagiarism.detectors.impl
 
-import ru.ipccenter.plagiarism.detectors.DetectionQuality
+import ru.ipccenter.plagiarism.detectors.DetectionError
 import ru.ipccenter.plagiarism.similarity.SimilarityDegree
 import ru.ipccenter.plagiarism.util.Util
 
@@ -13,7 +13,7 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
     private final double correctedSimilarity
     private final Collection<TokenSequence> falseDuplicateSequences
 
-    private DetectionQuality correctedDetectionQuality
+    private DetectionError correctedDetectionError
 
     PlaggieAdaptiveDetectionResult(PlaggieDetectionResult plainResult, double correctedSimilarity,
                                    Collection<TokenSequence> falseDuplicateSequences)
@@ -29,14 +29,14 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
         return correctedSimilarity
     }
 
-    DetectionQuality getCorrectedQuality()
+    DetectionError getCorrectedError()
     {
-        if (correctedDetectionQuality == null)
+        if (correctedDetectionError == null)
         {
-            correctedDetectionQuality = new DetectionQuality(
+            correctedDetectionError = new DetectionError(
                     pair.estimatedSimilarityDegree, correctedSimilarityDegree)
         }
-        return correctedDetectionQuality
+        return correctedDetectionError
     }
 
     SimilarityDegree getCorrectedSimilarityDegree()
@@ -57,6 +57,6 @@ class PlaggieAdaptiveDetectionResult extends PlaggieDetectionResult
     @Override
     String toString()
     {
-        return "$pair ($quality(${Util.format(similarity)}) -> $correctedQuality(${Util.format(correctedSimilarity)}))"
+        return "$pair ($error(${Util.format(similarity)}) -> $correctedError(${Util.format(correctedSimilarity)}))"
     }
 }

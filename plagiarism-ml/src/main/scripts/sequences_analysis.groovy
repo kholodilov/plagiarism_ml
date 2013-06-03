@@ -65,14 +65,14 @@ taskRepository.find(TASKS).each { task ->
                     def correctedDeltas = detectionResults.collect { abs(it.pair.estimatedSimilarity - it.correctedSimilarity) }
 */
 
-                    Map<Integer, Integer> originalQualityStatistics =
-                        detectionResults.collect { it.quality.value }.inject([:].withDefault {0}) {
+                    Map<Integer, Integer> originalErrorStatistics =
+                        detectionResults.collect { it.error.value }.inject([:].withDefault {0}) {
                             map, value ->  map[value]++; map }
-                    Map<Integer, Integer> correctedQualityStatistics =
-                        detectionResults.collect { it.correctedQuality.value }.inject([:].withDefault {0}) {
+                    Map<Integer, Integer> correctedErrorStatistics =
+                        detectionResults.collect { it.correctedError.value }.inject([:].withDefault {0}) {
                             map, value ->  map[value]++; map }
-                    def originalQualitySum = originalQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
-                    def correctedQualitySum = correctedQualityStatistics.collect { quality, count -> abs(quality) * count }.sum()
+                    def originalErrorSum = originalErrorStatistics.collect { quality, count -> abs(quality) * count }.sum()
+                    def correctedErrorSum = correctedErrorStatistics.collect { quality, count -> abs(quality) * count }.sum()
 
 /*
                     println "In control group found " + detectionResults.sum { it.falseDuplicatesCount } +
@@ -84,8 +84,8 @@ taskRepository.find(TASKS).each { task ->
                     println "Corrected delta: " + getStatistics(correctedDeltas)
 */
 
-                    println "\tOriginal quality statistics: ${originalQualityStatistics.sort()} (${originalQualitySum})"
-                    println "\tCorrected quality statistics: ${correctedQualityStatistics.sort()} (${correctedQualitySum})"
+                    println "\tOriginal error statistics: ${originalErrorStatistics.sort()} (${originalErrorSum})"
+                    println "\tCorrected error statistics: ${correctedErrorStatistics.sort()} (${correctedErrorSum})"
                     println ""
 
 /*
